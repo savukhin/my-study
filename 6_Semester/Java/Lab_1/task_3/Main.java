@@ -3,6 +3,8 @@
 prints the largest. Repeat with Math.max
  */
 
+package task_3;
+
 import java.util.Scanner;
 
 public class Main {

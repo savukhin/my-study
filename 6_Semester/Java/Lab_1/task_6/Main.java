@@ -3,6 +3,8 @@
 BigInteger. Compute the factorial of 1000.
  */
 
+package task_6;
+
 import java.math.BigInteger;
 import java.util.Scanner;
 

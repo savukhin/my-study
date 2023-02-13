@@ -3,6 +3,8 @@ Write a program that prints the smallest and largest positive double value. Hint
 Look up Math.nextUp in the Java API
  */
 
+package task_4;
+
 import java.util.Scanner;
 
 public class Main {

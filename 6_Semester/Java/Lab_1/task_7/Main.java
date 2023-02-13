@@ -4,6 +4,8 @@ short variables, and computes their unsigned sum, difference, product, quotient,
 and remainder, without converting them to int
  */
 
+package task_7;
+
 import java.util.Scanner;
 
 public class Main {

@@ -3,6 +3,8 @@
 together with their Unicode values
  */
 
+package task_11;
+
 import java.util.Scanner;
 
 public class Main {

@@ -4,6 +4,8 @@ normalizes it to a value between 0 and 359 degrees. Try it first with the % oper
 then with floorMod.
  */
 
+package task_2;
+
 import java.util.Scanner;
 
 public class Main {

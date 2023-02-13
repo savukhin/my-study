@@ -5,6 +5,8 @@ between 1 and 49. To pick six distinct numbers, start with an array list filled 
 result in sorted order.
 */
 
+package task_13;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;

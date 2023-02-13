@@ -2,6 +2,8 @@
  * Write a program that reads a string and prints all of its nonempty substrings
  */
 
+package task_8;
+
 import java.util.Scanner;
 
 public class Main {

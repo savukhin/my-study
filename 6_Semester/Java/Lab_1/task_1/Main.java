@@ -3,6 +3,8 @@
  * Print the reciprocal as a hexadecimal floating-point number
 */
 
+package task_1;
+
 import java.util.Scanner;
 
 public class Main {

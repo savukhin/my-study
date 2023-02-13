@@ -3,6 +3,7 @@
 random long value and printing it in base 36
  */
 
+package task_10;
 
 import java.util.Scanner;
 
