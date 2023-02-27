@@ -1,0 +1,8 @@
+go 1.19
+
+use (
+	./6_Semester/OS/Coursework
+	./6_Semester/OS/Coursework/generator
+	./6_Semester/OS/Coursework/processor
+	./6_Semester/OS/Coursework/server
+)
