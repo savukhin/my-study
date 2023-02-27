@@ -11,24 +11,32 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        // Scanner scanner = new Scanner(System.in);
-        // short number1 = scanner.nextShort();
-        // short number2 = scanner.nextShort();
-        // System.out.println((short) (number1 + number2));
-        // System.out.println((short) (number1 - number2));
-        // System.out.println((short) (number1 * number2));
-        // System.out.println((short) (number1 / number2));
-        // System.out.println((short) (number1 % number2));
-        // scanner.close();
-        int offset=32768;
-        Scanner ar=new Scanner(System.in);
-        short a=(short)( ar.nextInt()-offset);
-        short b=(short)( ar.nextInt()-offset);
-        System.out.println("*"+((a+offset)*(b+offset)));
-        System.out.println("+"+((a+offset)+(b+offset)));
-        System.out.println("+"+((a+offset)-(b+offset)));
-        System.out.println("+"+((a+offset)/(b+offset)));
-        System.out.println("+"+((a+offset)%(b+offset)));
-        ar.close();
+        System.out.println("Введите целочисленное значение от 0 до " + Short.MAX_VALUE+1 +":");
+        Scanner in = new Scanner(System.in);
+        int number1 = in.nextInt();
+        while (number1<0 || number1>Short.MAX_VALUE+1) {
+            System.out.println("Введите корректное значение!");
+            number1 = in.nextInt();
+        }
+
+
+        int number2 = in.nextInt();
+        while (number2<0 || number2>(Short.MAX_VALUE+1-number1)) {
+            System.out.println("Введите корректное значение!");
+            number2 = in.nextInt();
+        }
+
+
+        short sum = (short) (number1+number2);
+        System.out.println("Сумма: " + sum);
+
+        short multip = (short) (number1*number2);
+        System.out.println("Произведение: " + multip);
+
+        short del = (short) (number1/number2);
+        System.out.println("Деление: " + del);
+
+        short ost = (short) (number1 % number2);
+        System.out.println("Остаток: " + ost);
     }
 }
