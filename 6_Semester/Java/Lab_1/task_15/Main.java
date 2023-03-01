@@ -10,39 +10,43 @@ import java.util.Scanner;
 
 public class Main {
 
-    public static String repeat(int count, String with) {
-        return new String(new char[count]).replace("\0", with);
-    }
-    
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        int n = scanner.nextInt();
-        scanner.close();
-        
-        ArrayList<ArrayList<Integer>> pascalTriangle = new ArrayList<ArrayList<Integer>>();
-        
+        System.out.println("Введите целочисленное значение:");
+        Scanner in = new Scanner(System.in);
+        while (!in.hasNextInt()) {
+            System.out.println("Введите корректное значение!");
+            in.next();
+        }
+        int n = in.nextInt();
+        // массив из 'n' строк
+        ArrayList<ArrayList<Integer>> arr = new ArrayList<>();
+        // обходим строки массива
         for (int i = 0; i < n; i++) {
-            ArrayList<Integer> row = new ArrayList<Integer>();
-            for (int j = 0; j <= i; j++) {
-                if (j == 0 || j == i) {
-                    row.add(1);
+            // строка из 'n-i' элементов
+            ArrayList<Integer> arr1 = new ArrayList<>();
+            // обходим элементы строки
+            for (int j = 0; j < n - i; j++) {
+                if (i == 0 || j == 0) {
+                    // элементы первой строки
+                    // и колонки равны единице
+                    arr1.add(j, 1);
+                    arr.add(i, arr1);
                 } else {
-                    row.add(pascalTriangle.get(i - 1).get(j - 1) + pascalTriangle.get(i - 1).get(j));
+                    // все остальные элементы — есть сумма двух
+                    // предыдущих элементов в строке и в колонке
+                    arr1.add(j, arr.get(i).get(j-1) + arr.get(i-1).get(j));
+                    arr.add(i, arr1);
                 }
             }
-            pascalTriangle.add(row);
         }
-        
 
-        for (int i = 0; i < pascalTriangle.size(); i++) {
-            ArrayList<Integer> row = pascalTriangle.get(i);
-
-            System.out.print(repeat(n - i, " "));
-
-            for (Integer element : row) {
-                System.out.print(element + " ");
+        // обходим строки массива
+        for(int i=0; i < n; i++){
+            for(int j=0; j<arr.get(i).size(); j++) {
+                System.out.printf(" %2d", arr.get(i).get(j));
             }
             System.out.println();
+
         }
     }
 }
