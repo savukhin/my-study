@@ -1,21 +1,25 @@
 package models
 
-import "time"
-
 type GeneratorRequest struct {
-	ProcessTime  time.Duration `json:"process_time"`
-	NeedResponse bool          `json:"need_response"`
-	Priority     int           `json:"priority"`
+	ProcessTimeSec int  `json:"process_time_sec"`
+	NeedResponse   bool `json:"need_response"`
+	Priority       int  `json:"priority"`
+}
+
+type GeneratorResponse struct {
+	TaskID int `json:"task_id"`
 }
 
 type ProcessorMessage struct {
-	ProcessTime time.Duration `json:"process_time"`
+	ProcessTimeSec int `json:"process_time_sec"`
+	TaskID         int `json:"task_id"`
 }
 
 type ProcessorResponse struct {
 	Status bool `json:"status"`
 }
 
-type GeneratorResponse struct {
+type TaskCompletedRequest struct {
 	Status bool `json:"status"`
+	TaskID int  `json:"task_id"`
 }

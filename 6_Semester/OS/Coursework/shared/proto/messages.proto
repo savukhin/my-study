@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option go_package = "golang/messages;messages";
+package Messages;
+
+// import "google/protobuf/struct.proto";
+
+message GeneratorRequest {
+	int32 process_time_sec = 1;
+	bool need_reponse = 2;
+	int32 priority = 3;
+}
+
+message ProcessorMessage {
+	int32 process_time_sec = 1;
+	int32 task_id = 2;
+}
+
+message Task {
+    int32 task_id = 1;
+	int32 process_time_sec = 2;
+	bool need_reponse = 3;
+	int32 priority = 4;
+	bool completed = 5;
+}
+
+message CompletedTaskRequest {
+	int32 task_id = 2;
+}
+
+message Empty {}
+
+service CourseWork {
+    rpc GenerateTasks(stream GeneratorRequest) returns (stream Task);
+	rpc SubscribeProcessorOnTasks(Empty) returns (stream Task);
+    rpc CompletedTask(CompletedTaskRequest) returns (Empty);
+}
