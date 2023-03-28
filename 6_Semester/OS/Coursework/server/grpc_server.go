@@ -9,9 +9,9 @@ type CourseWorkServer struct {
 	pb.UnimplementedCourseWorkServer
 }
 
-type Hub struct {
-	
-}
+// type Hub struct {
+
+// }
 
 var (
 	processorUrls = make([]string, 0)
@@ -63,6 +63,6 @@ func (serv CourseWorkServer) SubscribeProcessorOnTasks(_ *pb.Empty, stream pb.Co
 }
 
 func (serv CourseWorkServer) CompletedTask(ctx context.Context, taskPb *pb.CompletedTaskRequest) (*pb.Empty, error) {
-	taskIDToChan[taskPb.TaskId] <-
+	// taskIDToChan[taskPb.TaskId] <-
 	return nil, nil
 }
