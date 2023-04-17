@@ -53,3 +53,23 @@ func TestParserFail(t *testing.T) {
 		require.Error(t, err)
 	}
 }
+
+func TestCheckSelector(t *testing.T) {
+	table, columns, condition, limit, err := checkSelector("select surname,   name, room  from employee   ")
+	require.NoError(t, err)
+	require.Equal(t, table, "employee")
+	require.Equal(t, columns, []string{"surname", "name", "room"})
+	require.Equal(t, condition.HasWhere, "")
+	require.Equal(t, limit.HasLimit, "")
+
+	table, columns, condition, limit, err = checkSelector("select surname, name, room from employee WHerE 	 room == '4'    LIMIT	 10 ")
+	require.NoError(t, err)
+	require.Equal(t, table, "employee")
+	require.Equal(t, columns, []string{"surname", "name", "room"})
+	require.NotEqual(t, condition.HasWhere, "")
+	require.Equal(t, condition.Column, "room")
+	require.Equal(t, condition.Sign, "==")
+	require.Equal(t, condition.Value, "4")
+	require.NotEqual(t, limit.HasLimit, "")
+	require.EqualValues(t, limit.Limit, 10)
+}
