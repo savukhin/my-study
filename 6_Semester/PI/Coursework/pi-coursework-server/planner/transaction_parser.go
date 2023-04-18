@@ -32,7 +32,7 @@ func checkBeginTransaction(query string) (transactionName string, err error) {
 	return
 }
 
-func checkCommitNamedTransaction(query string) (transactionName string, err error) {
+func checkCommitTransaction(query string) (transactionName string, err error) {
 	elem := &TransactionGroup{}
 	err = commitTransactionRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {
@@ -45,7 +45,7 @@ func checkCommitNamedTransaction(query string) (transactionName string, err erro
 	return
 }
 
-func checkCommitTransaction(query string) (err error) {
+func checkCommit(query string) (err error) {
 	matched := commitRegexp.MatchString(strings.TrimSpace(query))
 	if !matched {
 		err = errors.New("not matched")

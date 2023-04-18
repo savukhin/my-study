@@ -10,7 +10,7 @@ import (
 func TestParser(t *testing.T) {
 	t.Log("Create table suite")
 	{
-		plan, err := Parse("create table employees (surname, name, room)")
+		plan, err := ParseOneString("create table employees (surname, name, room)")
 		arr := plan.plan
 		require.NoError(t, err)
 		require.Equal(t, len(arr), 1)
@@ -23,7 +23,7 @@ func TestParser(t *testing.T) {
 
 	t.Log("Selector suite")
 	{
-		plan, err := Parse("select surname, name, room from employee WHerE 	 room == '4'    LIMIT	 10 ")
+		plan, err := ParseOneString("select surname, name, room from employee WHerE 	 room == '4'    LIMIT	 10 ")
 		arr := plan.plan
 		require.NoError(t, err)
 		require.Equal(t, len(arr), 4)
@@ -49,28 +49,28 @@ func TestParser(t *testing.T) {
 func TestParserFail(t *testing.T) {
 	t.Log("Create table suite")
 	{
-		_, err := Parse("create table emlpoyees (surname name room)")
+		_, err := ParseOneString("create table emlpoyees (surname name room)")
 		require.Error(t, err)
 
-		_, err = Parse("create table emlpoyees (surname, name,)")
+		_, err = ParseOneString("create table emlpoyees (surname, name,)")
 		require.Error(t, err)
 
-		_, err = Parse("createtable emlpoyees (surname, name, room)")
+		_, err = ParseOneString("createtable emlpoyees (surname, name, room)")
 		require.Error(t, err)
 
-		_, err = Parse("create tabl emlpoyees (surname, name, room)")
+		_, err = ParseOneString("create tabl emlpoyees (surname, name, room)")
 		require.Error(t, err)
 
-		_, err = Parse("create table (surname, name, room)")
+		_, err = ParseOneString("create table (surname, name, room)")
 		require.Error(t, err)
 
-		_, err = Parse("create tabl emlpoyees")
+		_, err = ParseOneString("create tabl emlpoyees")
 		require.Error(t, err)
 
-		_, err = Parse("create tabl emlpoyees ()")
+		_, err = ParseOneString("create tabl emlpoyees ()")
 		require.Error(t, err)
 
-		_, err = Parse("create tabl emlpoyees (,)")
+		_, err = ParseOneString("create tabl emlpoyees (,)")
 		require.Error(t, err)
 	}
 }
@@ -144,23 +144,28 @@ func TestCheckers(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, transaction, "hiring")
 
-		_, err = checkCommitNamedTransaction("CommIT hiring")
+		_, err = checkCommitTransaction("CommIT hiring")
 		require.NoError(t, err)
 		require.Equal(t, transaction, "hiring")
 
-		_, err = checkCommitNamedTransaction("Commit hiring limit 10")
+		_, err = checkCommitTransaction("Commit hiring limit 10")
 		require.Error(t, err)
 
-		err = checkCommitTransaction("CommIT")
+		err = checkCommit("CommIT")
 		require.NoError(t, err)
 
-		err = checkCommitTransaction("Commit hiring")
+		err = checkCommit("Commit hiring")
 		require.Error(t, err)
 
 		err = checkRollback("RoLLbAck")
 		require.NoError(t, err)
 
-		err = checkCommitTransaction("ROLback hiring")
+		err = checkCommit("ROLback hiring")
 		require.Error(t, err)
+	}
+
+	t.Log("updates")
+	{
+		// transaction, err := checkUpdate("update employee set room = '14' where index == 1")
 	}
 }
