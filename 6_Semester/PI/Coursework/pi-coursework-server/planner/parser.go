@@ -5,18 +5,10 @@ import (
 	"pi-coursework-server/processors"
 	"regexp"
 	"strings"
-
-	"github.com/oriser/regroup"
 )
 
 var (
-	dropTableRegexp         = regroup.MustCompile(`(?i)drop\s+table\s+(?P<table_name>\w+)`)
-	deleteRowsRegexp        = regroup.MustCompile(`(?i)delete\s+from\s+(?P<table_name>\w+)\s+where\s+(?P<where_column>\w+)\s*(?P<where_sign>(?:==)|(?:!=))\s+\'(?P<where_value>\w)\'`)
-	beginTransactionRegexp  = regroup.MustCompile(`(?i)begin\s+(?P<transaction_name>\w+)`)
-	commitTransactionRegexp = regroup.MustCompile(`(?i)commit\s+(?P<transaction_name>\w+)`)
-	commitRegexp            = regroup.MustCompile(`(?i)commit`)
-	rollbackRegexp          = regroup.MustCompile(`(?i)rollback`)
-	splitRegexp             = regexp.MustCompile(`,\s+`)
+	splitRegexp = regexp.MustCompile(`,\s+`)
 )
 
 type Plan struct {

@@ -75,27 +75,92 @@ func TestParserFail(t *testing.T) {
 	}
 }
 
-func TestCheckSelector(t *testing.T) {
-	table, columns, condition, limit, err := checkSelector("select surname,   name, room  from employee   ")
-	require.NoError(t, err)
-	require.Equal(t, table, "employee")
-	require.Equal(t, columns, []string{"surname", "name", "room"})
-	require.Equal(t, condition.HasWhere, false)
-	require.Equal(t, limit.HasLimit, false)
-	require.Equal(t, limit.LimitStr, "")
+func TestCheckers(t *testing.T) {
+	t.Log("check selector")
+	{
+		table, columns, condition, limit, err := checkSelector("select surname,   name, room  from employee   ")
+		require.NoError(t, err)
+		require.Equal(t, table, "employee")
+		require.Equal(t, columns, []string{"surname", "name", "room"})
+		require.Equal(t, condition.HasWhere, false)
+		require.Equal(t, limit.HasLimit, false)
+		require.Equal(t, limit.LimitStr, "")
 
-	table, columns, condition, limit, err = checkSelector("select surname, name, room from employee WHerE 	 room == '4'    LIMIT	 10 ")
-	require.NoError(t, err)
-	require.Equal(t, table, "employee")
-	require.Equal(t, columns, []string{"surname", "name", "room"})
-	require.Equal(t, condition.HasWhere, true)
-	require.Equal(t, condition.Column, "room")
-	require.Equal(t, condition.Sign, "==")
-	require.Equal(t, condition.Value, "4")
-	require.Equal(t, limit.LimitStr, "LIMIT")
-	require.Equal(t, limit.HasLimit, true)
-	require.EqualValues(t, limit.Limit, 10)
+		table, columns, condition, limit, err = checkSelector("select surname, name, room from employee WHerE 	 room == '4'    LIMIT	 10 ")
+		require.NoError(t, err)
+		require.Equal(t, table, "employee")
+		require.Equal(t, columns, []string{"surname", "name", "room"})
+		require.Equal(t, condition.HasWhere, true)
+		require.Equal(t, condition.Column, "room")
+		require.Equal(t, condition.Sign, "==")
+		require.Equal(t, condition.Value, "4")
+		require.Equal(t, limit.LimitStr, "LIMIT")
+		require.Equal(t, limit.HasLimit, true)
+		require.EqualValues(t, limit.Limit, 10)
 
-	table, columns, condition, limit, err = checkSelector("select surname, name, room from employee WHerE 	 room = '4'    LIMIT	 10 ")
-	require.Error(t, err)
+		_, _, _, _, err = checkSelector("select surname, name, room from employee WHerE 	 room = '4'    LIMIT	 10 ")
+		require.Error(t, err)
+	}
+
+	t.Log("drop table")
+	{
+		table, err := checkDropTable("drop table adf")
+		require.NoError(t, err)
+		require.Equal(t, table, "adf")
+
+		_, err = checkDropTable("drop table ")
+		require.Error(t, err)
+	}
+
+	t.Log("delete rows")
+	{
+		table, where, err := checkDeleteRows("delete from adf WhERe room != '4'")
+		require.NoError(t, err)
+		require.Equal(t, table, "adf")
+		require.Equal(t, where.Column, "room")
+		require.Equal(t, where.Sign, "!=")
+		require.Equal(t, where.Value, "4")
+
+		_, _, err = checkDeleteRows("delete from WhERe room != '4'")
+		require.Error(t, err)
+
+		_, _, err = checkDeleteRows("delete from adf room != '4'")
+		require.Error(t, err)
+
+		_, _, err = checkDeleteRows("delete from adf WHERE room = '4'")
+		require.Error(t, err)
+	}
+
+	t.Log("transactions")
+	{
+		transaction, err := checkBeginTransaction("begin hiring")
+		require.NoError(t, err)
+		require.Equal(t, transaction, "hiring")
+
+		_, err = checkBeginTransaction("begin")
+		require.Error(t, err)
+
+		_, err = checkBeginTransaction("bEgiN    hiring")
+		require.NoError(t, err)
+		require.Equal(t, transaction, "hiring")
+
+		_, err = checkCommitNamedTransaction("CommIT hiring")
+		require.NoError(t, err)
+		require.Equal(t, transaction, "hiring")
+
+		_, err = checkCommitNamedTransaction("Commit hiring limit 10")
+		require.Error(t, err)
+
+		err = checkCommitTransaction("CommIT")
+		require.NoError(t, err)
+
+		err = checkCommitTransaction("Commit hiring")
+		require.Error(t, err)
+
+		err = checkRollback("RoLLbAck")
+		require.NoError(t, err)
+
+		err = checkCommitTransaction("ROLback hiring")
+		require.Error(t, err)
+	}
 }

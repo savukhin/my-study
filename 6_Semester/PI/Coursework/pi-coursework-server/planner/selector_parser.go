@@ -11,10 +11,14 @@ var (
 )
 
 type WhereCondition struct {
+	Sign   string `regroup:"where_sign"`
+	Column string `regroup:"where_column"`
+	Value  string `regroup:"where_value"`
+}
+
+type WhereConditionCheck struct {
 	WhereStr string `regroup:"has_where"`
-	Sign     string `regroup:"where_sign"`
-	Column   string `regroup:"where_column"`
-	Value    string `regroup:"where_value"`
+	WhereCondition
 	HasWhere bool
 }
 
@@ -27,11 +31,11 @@ type LimitCondition struct {
 type SelectorGroup struct {
 	TableName string `regroup:"table_name"`
 	Columns   string `regroup:"columns"`
-	Where     WhereCondition
+	Where     WhereConditionCheck
 	Limit     LimitCondition
 }
 
-func checkSelector(query string) (tableName string, columns []string, whereCondition WhereCondition, limit LimitCondition, err error) {
+func checkSelector(query string) (tableName string, columns []string, whereCondition WhereConditionCheck, limit LimitCondition, err error) {
 	elem := &SelectorGroup{}
 	err = selectRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {
