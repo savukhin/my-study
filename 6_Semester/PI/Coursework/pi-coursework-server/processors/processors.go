@@ -1,12 +1,7 @@
-package planner
+package processors
 
 type IProcessor interface {
-	GetName() string
 	DoProcess() error
-}
-
-type Aggregator struct {
-	IProcessor
 }
 
 type Deletor struct {

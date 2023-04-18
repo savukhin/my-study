@@ -2,6 +2,7 @@ package planner
 
 import (
 	"errors"
+	"pi-coursework-server/processors"
 	"regexp"
 	"strings"
 
@@ -9,61 +10,17 @@ import (
 )
 
 var (
-	createTableRegexp = regexp.MustCompile(`^(?i)create\s+table\s+(?P<table_name>\w+)\s+\((?P<cols>(?:\w+,\s*)*\w+)\)$`)
-	selectRegexp      = regroup.MustCompile(`(?i)select\s+(?:(?P<columns>(?:(?:\w+,\s*)*\w+))|(?:\*))\s+from\s+(?P<table_name>\w+)(?:\s+(?P<has_where>where)\s+(?P<where_condition>(?P<where_column>\w+)\s*(?P<where_sign>(?:==)|(?:!=))\s+\'(?P<where_value>\w)\'))?(?:\s+(?P<has_limit>limit)\s+(?P<limit>\d+))?`)
-	splitRegexp       = regexp.MustCompile(`,\s+`)
+	dropTableRegexp         = regroup.MustCompile(`(?i)drop\s+table\s+(?P<table_name>\w+)`)
+	deleteRowsRegexp        = regroup.MustCompile(`(?i)delete\s+from\s+(?P<table_name>\w+)\s+where\s+(?P<where_column>\w+)\s*(?P<where_sign>(?:==)|(?:!=))\s+\'(?P<where_value>\w)\'`)
+	beginTransactionRegexp  = regroup.MustCompile(`(?i)begin\s+(?P<transaction_name>\w+)`)
+	commitTransactionRegexp = regroup.MustCompile(`(?i)commit\s+(?P<transaction_name>\w+)`)
+	commitRegexp            = regroup.MustCompile(`(?i)commit`)
+	rollbackRegexp          = regroup.MustCompile(`(?i)rollback`)
+	splitRegexp             = regexp.MustCompile(`,\s+`)
 )
 
 type Plan struct {
-	plan []IProcessor
-}
-
-func checkCreateTable(query string) (tableName string, columns []string, err error) {
-	result := createTableRegexp.FindStringSubmatch(query)
-	if len(result) != 3 {
-		err = errors.New("mismatch of columns")
-		return
-	}
-
-	tableName = result[1]
-	columns_str := result[2]
-	columns = strings.Split(columns_str, ", ")
-	err = nil
-
-	return
-}
-
-type WhereCondition struct {
-	HasWhere string `regroup:"has_where"`
-	Sign     string `regroup:"where_sign"`
-	Column   string `regroup:"where_column"`
-	Value    string `regroup:"where_value"`
-}
-
-type LimitCondition struct {
-	Limit    int32  `regroup:"limit"`
-	HasLimit string `regroup:"has_limit"`
-}
-
-type SelectorGroup struct {
-	TableName string `regroup:"table_name"`
-	Columns   string `regroup:"columns"`
-	Where     WhereCondition
-	Limit     LimitCondition
-}
-
-func checkSelector(query string) (tableName string, columns []string, whereCondition WhereCondition, limit LimitCondition, err error) {
-	elem := &SelectorGroup{}
-	err = selectRegexp.MatchToTarget(query, elem)
-	if err != nil {
-		return
-	}
-
-	tableName = elem.TableName
-	columns = splitRegexp.Split(elem.Columns, -1)
-	whereCondition = elem.Where
-	limit = elem.Limit
-	return
+	plan []processors.IProcessor
 }
 
 func Parse(query string) (*Plan, error) {
@@ -74,15 +31,26 @@ func Parse(query string) (*Plan, error) {
 
 	tableName, columns, err := checkCreateTable(query)
 	if err == nil {
-		plan.plan = append(plan.plan, NewTableCreator(tableName, columns))
+		plan.plan = append(plan.plan, processors.NewTableCreator(tableName, columns))
 		return plan, nil
 	}
 
-	// tableName, columns, whereCondition, limit, err := checkSelector(query)
-	// if err == nil {
-	// 	plan.plan = append(plan.plan, NewTableCreator(tableName, columns))
-	// 	return plan, nil
-	// }
+	tableName, columns, whereCondition, limiter, err := checkSelector(query)
+	if err == nil {
+		plan.plan = append(plan.plan, processors.NewTableGetter(tableName))
+
+		if whereCondition.HasWhere {
+			plan.plan = append(plan.plan, processors.NewAggregator(whereCondition.Column, whereCondition.Sign, whereCondition.Value))
+		}
+
+		plan.plan = append(plan.plan, processors.NewSelector(columns))
+
+		if limiter.HasLimit {
+			plan.plan = append(plan.plan, processors.NewLimiter(limiter.Limit))
+		}
+
+		return plan, nil
+	}
 
 	return nil, errors.New("no matching pattern")
 }

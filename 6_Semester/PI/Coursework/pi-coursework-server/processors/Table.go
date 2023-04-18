@@ -1,4 +1,4 @@
-package planner
+package processors
 
 type Dimensions struct {
 	X int
