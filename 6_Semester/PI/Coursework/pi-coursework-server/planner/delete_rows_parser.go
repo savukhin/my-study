@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	deleteRowsRegexp = regroup.MustCompile(`(?i)delete\s+from\s+(?P<table_name>\w+)\s+where\s+(?P<where_column>\w+)\s*(?P<where_sign>(?:==)|(?:!=))\s+\'(?P<where_value>\w)\'`)
+	deleteRowsRegexp = regroup.MustCompile(`(?i)delete\s+from\s+(?P<table_name>\w+)\s+where\s+(?P<where_column>\w+)\s+(?P<where_sign>(?:==)|(?:!=))\s+(?P<where_value>(?:\'(?P<where_value_str>\w+)\')|(?P<where_value_int>\d+))`)
 )
 
 type DeleteRowsGroup struct {

@@ -1,19 +1,30 @@
 package planner
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/oriser/regroup"
 )
 
 var (
-	selectRegexp = regroup.MustCompile(`^(?i)select\s+(?:(?P<columns>(?:(?:\w+,\s*)*\w+))|(?:\*))\s+from\s+(?P<table_name>\w+)(?:\s+(?P<has_where>where)\s+(?P<where_condition>(?P<where_column>\w+)\s*(?P<where_sign>(?:==)|(?:!=))\s+\'(?P<where_value>\w)\'))?(?:\s+(?P<has_limit>limit)\s+(?P<limit>\d+))?$`)
+	selectRegexp = regroup.MustCompile(`(?i)^select\s+(?:(?P<columns>(?:(?:\s*\w+\s*,\s*)*\s*\w+))|(?:\*))\s+from\s+(?P<table_name>\w+)(?:\s+(?P<has_where>where)\s+(?P<where_column>\w+)\s+(?P<where_sign>(?:==)|(?:!=))\s+(?P<where_value>(?:\'(?P<where_value_str>\w+)\')|(?P<where_value_int>\d+)))?(?:\s+(?P<has_limit>limit)\s+(?P<limit>\d+))?$`)
 )
 
 type WhereCondition struct {
-	Sign   string `regroup:"where_sign"`
-	Column string `regroup:"where_column"`
-	Value  string `regroup:"where_value"`
+	Sign     string `regroup:"where_sign"`
+	Column   string `regroup:"where_column"`
+	Value    string `regroup:"where_value"`
+	ValueStr string `regroup:"where_value_str"`
+	ValueInt int32  `regroup:"where_value_int"`
+}
+
+func (where *WhereCondition) ExtractValue() string {
+	if where.Value[0] == '\'' {
+		return where.ValueStr
+	} else {
+		return strconv.Itoa(int(where.ValueInt))
+	}
 }
 
 type WhereConditionCheck struct {
@@ -43,7 +54,7 @@ func checkSelector(query string) (tableName string, columns []string, whereCondi
 	}
 
 	tableName = elem.TableName
-	columns = splitRegexp.Split(elem.Columns, -1)
+	columns = splitRegexp.Split(strings.TrimSpace(elem.Columns), -1)
 
 	whereCondition = elem.Where
 	whereCondition.HasWhere = (whereCondition.WhereStr != "")

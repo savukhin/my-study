@@ -44,6 +44,19 @@ func TestParser(t *testing.T) {
 		require.Equal(t, "==", aggregator.Sign)
 		require.EqualValues(t, 10, limiter.Count)
 	}
+
+	t.Log("Insert&Update suite")
+	{
+		plan, err := ParseOneString("insert into employee (col1, col2, col3) values (val1, val2, val3)")
+		arr := plan.plan
+		require.NoError(t, err)
+		require.Equal(t, len(arr), 2)
+
+		plan, err = ParseOneString("update employee set username = 'Ivanov' where room == '2'")
+		arr = plan.plan
+		require.NoError(t, err)
+		require.Equal(t, len(arr), 3)
+	}
 }
 
 func TestParserFail(t *testing.T) {
@@ -93,7 +106,7 @@ func TestCheckers(t *testing.T) {
 		require.Equal(t, condition.HasWhere, true)
 		require.Equal(t, condition.Column, "room")
 		require.Equal(t, condition.Sign, "==")
-		require.Equal(t, condition.Value, "4")
+		require.EqualValues(t, condition.ValueStr, "4")
 		require.Equal(t, limit.LimitStr, "LIMIT")
 		require.Equal(t, limit.HasLimit, true)
 		require.EqualValues(t, limit.Limit, 10)
@@ -119,7 +132,7 @@ func TestCheckers(t *testing.T) {
 		require.Equal(t, table, "adf")
 		require.Equal(t, where.Column, "room")
 		require.Equal(t, where.Sign, "!=")
-		require.Equal(t, where.Value, "4")
+		require.Equal(t, where.ValueStr, "4")
 
 		_, _, err = checkDeleteRows("delete from WhERe room != '4'")
 		require.Error(t, err)
@@ -166,6 +179,47 @@ func TestCheckers(t *testing.T) {
 
 	t.Log("updates")
 	{
-		// transaction, err := checkUpdate("update employee set room = '14' where index == 1")
+		tableName, setColumnName, setValue, where, err := checkUpdate("update employee set room = '14' where index == 1")
+		require.NoError(t, err)
+		require.Equal(t, tableName, "employee")
+		require.Equal(t, setColumnName, "room")
+		require.Equal(t, setValue, "14")
+		require.Equal(t, where.Column, "index")
+		require.Equal(t, where.Sign, "==")
+		require.EqualValues(t, where.ValueInt, 1)
+		require.EqualValues(t, where.Value, "1")
+	}
+
+	t.Log("add user")
+	{
+		username, password, err := checkAddUser("adD   User USErNAME     	passwOrd    PASsWOrd")
+		require.NoError(t, err)
+		require.Equal(t, username, "USErNAME")
+		require.Equal(t, password, "PASsWOrd")
+
+		_, _, err = checkAddUser("adD   User USERNAME     	passOrd    PASSWORD")
+		require.Error(t, err)
+	}
+
+	t.Log("insert")
+	{
+		tableName, columns, err := checkInsert("  inSerT   INto   mploy3e2e( col1, col2,COL3,  	COl4  )   values  (  val1,   val2,val3  , val4  )   ")
+		require.NoError(t, err)
+		require.Equal(t, tableName, "mploy3e2e")
+		require.Equal(t, columns, map[string]string{"col1": "val1", "col2": "val2", "COL3": "val3", "COl4": "val4"})
+
+		tableName, columns, err = checkInsert("inSerT INto mploy3e2e 	( col1 ) values (val1)   ")
+		require.NoError(t, err)
+		require.Equal(t, tableName, "mploy3e2e")
+		require.Equal(t, columns, map[string]string{"col1": "val1"})
+
+		_, _, err = checkInsert("insert into employee(col1) values (val1,)   ")
+		require.Error(t, err)
+
+		_, _, err = checkInsert("insert into employee (col2, col3) values (val1, val2,)   ")
+		require.Error(t, err)
+
+		_, _, err = checkInsert("insert into employee() values ()   ")
+		require.Error(t, err)
 	}
 }

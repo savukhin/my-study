@@ -7,8 +7,12 @@ import (
 	"strings"
 )
 
+const (
+	PIDBUsersTable = "my_cool_db_users"
+)
+
 var (
-	splitRegexp = regexp.MustCompile(`,\s+`)
+	splitRegexp = regexp.MustCompile(`\s*,\s*`)
 )
 
 type Plan struct {
@@ -21,9 +25,34 @@ func ParseOneString(query string) (*Plan, error) {
 
 	plan := &Plan{}
 
+	username, password, err := checkAddUser(query)
+	if err == nil {
+		plan.plan = append(plan.plan, processors.NewTableGetter(PIDBUsersTable))
+		plan.plan = append(plan.plan, processors.NewInserter(map[string]string{"username": username, "password": password}))
+
+		return plan, nil
+	}
+
 	tableName, columns, err := checkCreateTable(query)
 	if err == nil {
 		plan.plan = append(plan.plan, processors.NewTableCreator(tableName, columns))
+		return plan, nil
+	}
+
+	tableName, values, err := checkInsert(query)
+	if err == nil {
+		plan.plan = append(plan.plan, processors.NewTableGetter(tableName))
+		plan.plan = append(plan.plan, processors.NewInserter(values))
+
+		return plan, nil
+	}
+
+	tableName, setColumnName, setValue, where, err := checkUpdate(query)
+	if err == nil {
+		plan.plan = append(plan.plan, processors.NewTableGetter(tableName))
+		plan.plan = append(plan.plan, processors.NewAggregator(where.Column, where.Sign, where.ExtractValue()))
+		plan.plan = append(plan.plan, processors.NewUpdater(setColumnName, setValue))
+
 		return plan, nil
 	}
 
@@ -32,7 +61,7 @@ func ParseOneString(query string) (*Plan, error) {
 		plan.plan = append(plan.plan, processors.NewTableGetter(tableName))
 
 		if whereCondition.HasWhere {
-			plan.plan = append(plan.plan, processors.NewAggregator(whereCondition.Column, whereCondition.Sign, whereCondition.Value))
+			plan.plan = append(plan.plan, processors.NewAggregator(whereCondition.Column, whereCondition.Sign, whereCondition.ExtractValue()))
 		}
 
 		plan.plan = append(plan.plan, processors.NewSelector(columns))
@@ -51,10 +80,10 @@ func ParseOneString(query string) (*Plan, error) {
 		return plan, nil
 	}
 
-	tableName, where, err := checkDeleteRows(query)
+	tableName, where, err = checkDeleteRows(query)
 	if err == nil {
 		plan.plan = append(plan.plan, processors.NewTableGetter(tableName))
-		plan.plan = append(plan.plan, processors.NewAggregator(where.Column, where.Sign, where.Value))
+		plan.plan = append(plan.plan, processors.NewAggregator(where.Column, where.Sign, where.ExtractValue()))
 		plan.plan = append(plan.plan, processors.NewDeleter())
 
 		return plan, nil
