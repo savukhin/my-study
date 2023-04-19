@@ -57,6 +57,54 @@ func TestParser(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, len(arr), 3)
 	}
+
+	t.Log("Test whole query")
+	{
+		plan, err := ParseFullQuery(`
+			BEGIN my_super_transaction;
+			UPDATE employee SET room = '15' WHERE surname == 'Ivanov';
+			UPDATE employee SET room = '14' WHERE surname == 'Petrov';
+			COMMIT my_super_transaction;
+		`)
+		require.NoError(t, err)
+
+		arr := plan.plan
+		require.Equal(t, len(arr), 8)
+
+		transaction, ok := arr[0].(*processors.BeginTransaction)
+		require.True(t, ok)
+		require.Equal(t, transaction.Name, "my_super_transaction")
+
+		tabler, ok := arr[1].(*processors.TableGetter)
+		require.True(t, ok)
+		require.Equal(t, tabler.Table, "employee")
+		aggregator, ok := arr[2].(*processors.Aggregator)
+		require.True(t, ok)
+		require.Equal(t, aggregator.Column, "surname")
+		require.Equal(t, aggregator.Sign, "==")
+		require.Equal(t, aggregator.Value, "Ivanov")
+		updater, ok := arr[3].(*processors.Updater)
+		require.True(t, ok)
+		require.Equal(t, updater.Column, "room")
+		require.Equal(t, updater.NewValue, "15")
+
+		tabler, ok = arr[4].(*processors.TableGetter)
+		require.True(t, ok)
+		require.Equal(t, tabler.Table, "employee")
+		aggregator, ok = arr[5].(*processors.Aggregator)
+		require.True(t, ok)
+		require.Equal(t, aggregator.Column, "surname")
+		require.Equal(t, aggregator.Sign, "==")
+		require.Equal(t, aggregator.Value, "Petrov")
+		updater, ok = arr[6].(*processors.Updater)
+		require.True(t, ok)
+		require.Equal(t, updater.Column, "room")
+		require.Equal(t, updater.NewValue, "14")
+
+		commit, ok := arr[7].(*processors.CommitTransaction)
+		require.True(t, ok)
+		require.Equal(t, commit.Name, "my_super_transaction")
+	}
 }
 
 func TestParserFail(t *testing.T) {

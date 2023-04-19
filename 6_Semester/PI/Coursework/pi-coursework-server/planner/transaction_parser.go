@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	beginTransactionRegexp  = regroup.MustCompile(`^(?i)begin\s+(?P<transaction_name>\w+)$`)
-	commitTransactionRegexp = regroup.MustCompile(`^(?i)commit\s+(?P<transaction_name>\w+)$`)
-	commitRegexp            = regexp.MustCompile(`^(?i)commit$`)
-	rollbackRegexp          = regexp.MustCompile(`^(?i)rollback$`)
+	beginTransactionRegexp  = regroup.MustCompile(`(?i)^begin\s+(?P<transaction_name>\w+)$`)
+	commitTransactionRegexp = regroup.MustCompile(`(?i)^commit\s+(?P<transaction_name>\w+)$`)
+	commitRegexp            = regexp.MustCompile(`(?i)^commit$`)
+	rollbackRegexp          = regexp.MustCompile(`(?i)^rollback$`)
 )
 
 type TransactionGroup struct {
