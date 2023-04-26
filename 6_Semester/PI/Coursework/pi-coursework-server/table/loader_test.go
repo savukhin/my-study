@@ -16,6 +16,7 @@ func createRecords(records [][]string, fileName string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	w := csv.NewWriter(file)
 	w.Comma = ','

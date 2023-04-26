@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.9.0
-	github.com/markphelps/optional v0.10.0
 	github.com/oriser/regroup v0.0.0-20210730155327-fca8d7531263
 	github.com/stretchr/testify v1.8.1
 )
