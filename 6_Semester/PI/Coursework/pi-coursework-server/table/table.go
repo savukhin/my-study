@@ -11,11 +11,10 @@ type IndexRange struct {
 }
 
 type Table struct {
-	// Elems [][]string
-
-	// Shape Dimensions
-
-	Ranges []IndexRange
+	TableName string
+	Columns   []string
+	Values    [][]string
+	Shape     Dimensions
 }
 
 func NewTable() *Table {

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	PIDBUsersTable = "my_cool_db_users"
+	PIDBUsersTable = "pidb_users"
 )
 
 var (
