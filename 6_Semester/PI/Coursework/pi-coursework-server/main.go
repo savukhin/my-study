@@ -6,14 +6,9 @@ import (
 )
 
 func main() {
-	fmt.Println("Start server")
-	// api.
-	// r := router
-
 	r := api.SetupRouter()
 
+	fmt.Println("Start server")
+
 	r.Run()
-
-	// rou
-
 }
