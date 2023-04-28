@@ -11,7 +11,7 @@ func TestParser(t *testing.T) {
 	t.Log("Create table suite")
 	{
 		plan, err := ParseOneString("create table employees (surname, name, room)")
-		arr := plan.plan
+		arr := plan.Plan
 		require.NoError(t, err)
 		require.Equal(t, len(arr), 1)
 
@@ -24,7 +24,7 @@ func TestParser(t *testing.T) {
 	t.Log("Selector suite")
 	{
 		plan, err := ParseOneString("select surname, name, room from employee WHerE 	 room == '4'    LIMIT	 10 ")
-		arr := plan.plan
+		arr := plan.Plan
 		require.NoError(t, err)
 		require.Equal(t, len(arr), 4)
 
@@ -48,12 +48,12 @@ func TestParser(t *testing.T) {
 	t.Log("Insert&Update suite")
 	{
 		plan, err := ParseOneString("insert into employee (col1, col2, col3) values (val1, val2, val3)")
-		arr := plan.plan
+		arr := plan.Plan
 		require.NoError(t, err)
 		require.Equal(t, len(arr), 2)
 
 		plan, err = ParseOneString("update employee set username = 'Ivanov' where room == '2'")
-		arr = plan.plan
+		arr = plan.Plan
 		require.NoError(t, err)
 		require.Equal(t, len(arr), 3)
 	}
@@ -68,7 +68,7 @@ func TestParser(t *testing.T) {
 		`)
 		require.NoError(t, err)
 
-		arr := plan.plan
+		arr := plan.Plan
 		require.Equal(t, len(arr), 8)
 
 		transaction, ok := arr[0].(*processors.BeginTransaction)

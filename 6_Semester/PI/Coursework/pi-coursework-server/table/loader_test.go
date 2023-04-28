@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
+	"pi-coursework-server/utils"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,10 +27,7 @@ func createRecords(records [][]string, fileName string) error {
 
 func TestLoader(t *testing.T) {
 	// ------ FIXTURE LIKE ------ //
-	ex, err := os.Executable()
-	require.NoError(t, err)
-
-	exPath := filepath.Dir(ex)
+	exPath := utils.GetExecutablePath()
 
 	TABLES_PATH = exPath
 
