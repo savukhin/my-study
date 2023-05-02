@@ -2,7 +2,6 @@ package executor
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"path"
 	"pi-coursework-server/planner"
@@ -152,10 +151,26 @@ func TestExecutor(t *testing.T) {
 		storage2, err := updater.DoExecute(storage)
 
 		require.NoError(t, err)
-		fmt.Println("storage ", storage.MustGetTable("users"))
-		fmt.Println("storage2 ", storage2.MustGetTable("users"))
 
 		require.Equal(t, "Vitek", storage.MustGetTable("users").Values[1][0])
 		require.Equal(t, "Bob", storage2.MustGetTable("users").Values[1][0])
+	}
+
+	t.Log("Deleter test")
+	{
+		storage := table.NewStorage()
+		storage.AddTable(users_table)
+		storage.AddTable(rooms_table)
+
+		deleter := NewDeleter("rooms", "floor", "==", "15")
+		require.Equal(t, 2, len(storage.GetTables()))
+
+		require.Equal(t, 5, storage.MustGetTable("rooms").Shape.Y)
+
+		storage2, err := deleter.DoExecute(storage)
+
+		require.NoError(t, err)
+		require.Equal(t, 5, storage.MustGetTable("rooms").Shape.Y)
+		require.Equal(t, 2, storage2.MustGetTable("rooms").Shape.Y)
 	}
 }

@@ -220,6 +220,17 @@ func (table *Table) UpdateRow(row int, valuesMap map[string]string) error {
 	return nil
 }
 
+func (table *Table) DeleteRow(row int) error {
+	if row < 0 || row >= table.Shape.Y {
+		return errors.New("row " + strconv.Itoa(row) + " out of range " + strconv.Itoa(table.Shape.Y))
+	}
+
+	table.Values = append(table.Values[:row], table.Values[row+1:]...)
+
+	table.Shape.Y--
+	return nil
+}
+
 func (table *Table) Copy() *Table {
 	values := make([][]string, len(table.Values))
 	columns := make([]string, len(table.Columns))

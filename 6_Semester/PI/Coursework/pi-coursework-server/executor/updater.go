@@ -48,9 +48,9 @@ func (updater *Updater) DoExecute(storage *table.Storage) (table.Storage, error)
 		return *copied, nil
 	}
 
-	for x, row := range tab.Values {
-		if row[columnInd] == updater.CompareValues && updater.Sign == EqualWhereSign {
-			err := tab.UpdateRow(x, updater.NewValues)
+	for y, row := range tab.Values {
+		if (row[columnInd] == updater.CompareValues && updater.Sign == EqualWhereSign) || (row[columnInd] != updater.CompareValues && updater.Sign == NotEqualWhereSign) {
+			err := tab.UpdateRow(y, updater.NewValues)
 			if err != nil {
 				return *copied, err
 			}
