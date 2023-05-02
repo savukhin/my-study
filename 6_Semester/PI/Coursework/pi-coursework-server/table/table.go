@@ -29,6 +29,24 @@ type Table struct {
 	Shape          Dimensions
 }
 
+func (table *Table) mapOfValuesToValuesArray(valuesMap map[string]string) ([]string, error) {
+	if len(valuesMap) != table.Shape.X {
+		return nil, errors.New("values must have len of " + strconv.Itoa(table.Shape.X) +
+			" but they have " + strconv.Itoa(len(valuesMap)))
+	}
+
+	resultValues := make([]string, len(valuesMap))
+	for i, column := range table.Columns {
+		val, ok := valuesMap[column]
+		if !ok {
+			return nil, errors.New("no such column name " + column)
+		}
+		resultValues[i] = val
+	}
+
+	return resultValues, nil
+}
+
 func MustNewTable(tableName string, columns []string, values [][]string) *Table {
 	tab, err := NewTable(tableName, columns, values)
 	if err != nil {
@@ -111,18 +129,9 @@ func (table *Table) GetColumn(column string) ([]string, error) {
 }
 
 func (table *Table) AddRowMap(values map[string]string) error {
-	if len(values) != table.Shape.X {
-		return errors.New("values must have len of " + strconv.Itoa(table.Shape.X) +
-			" but they have " + strconv.Itoa(len(values)))
-	}
-
-	resultValues := make([]string, len(values))
-	for i, column := range table.Columns {
-		val, ok := values[column]
-		if !ok {
-			return errors.New("no such column name " + column)
-		}
-		resultValues[i] = val
+	resultValues, err := table.mapOfValuesToValuesArray(values)
+	if err != nil {
+		return err
 	}
 
 	return table.AddRow(resultValues)
@@ -176,13 +185,51 @@ func (table *Table) GetSlice(from_y int, to_y int) (Table, error) {
 	return *result, nil
 }
 
+func (table *Table) GetColumnIndex(name string) (int, error) {
+	val, ok := table.columnsSet[name]
+	if !ok {
+		return 0, errors.New("no column named " + name)
+	}
+	return val, nil
+}
+
+func (table *Table) UpdateRow(row int, valuesMap map[string]string) error {
+	if row < 0 || row >= table.Shape.Y {
+		return errors.New("row " + strconv.Itoa(row) + " out of range " + strconv.Itoa(table.Shape.Y))
+	}
+	// values, err := table.mapOfValuesToValuesArray(valuesMap)
+	// if err != nil {
+	// 	return err
+	// }
+	// table.Values[row] = values
+
+	// Check column before
+	for column, _ := range valuesMap {
+		_, ok := table.columnsSet[column]
+		if !ok {
+			return errors.New("no such column")
+		}
+	}
+
+	for column, value := range valuesMap {
+		ind := table.columnsSet[column]
+
+		table.Values[row][ind] = value
+	}
+
+	return nil
+}
+
 func (table *Table) Copy() *Table {
 	values := make([][]string, len(table.Values))
 	columns := make([]string, len(table.Columns))
 
-	copy(values, table.Values)
-
 	copy(columns, table.Columns)
+
+	for y, row := range table.Values {
+		values[y] = make([]string, len(row))
+		copy(values[y], row)
+	}
 
 	copied := MustNewTable(table.TableName, columns, values)
 

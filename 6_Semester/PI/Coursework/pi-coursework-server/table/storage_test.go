@@ -45,5 +45,11 @@ func TestStorage(t *testing.T) {
 
 		require.Equal(t, 6, storage.MustGetTable("rooms").Shape.Y)
 		require.Equal(t, 5, storage2.MustGetTable("rooms").Shape.Y)
+
+		storage.AddTable(users_table)
+
+		storage2.MustGetTable("users").Values[0][0] = "Alice"
+		require.Equal(t, "Petrarh", storage.MustGetTable("users").Values[0][0])
+		require.Equal(t, "Alice", storage2.MustGetTable("users").Values[0][0])
 	}
 }

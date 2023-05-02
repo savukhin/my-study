@@ -47,7 +47,7 @@ func (inserter *Inserter) DoExecute(storage *table.Storage) (table.Storage, erro
 	copied := storage.Copy()
 	tab, err := copied.GetTable(inserter.TableName)
 	if err != nil {
-		return *copied, nil
+		return *copied, err
 	}
 
 	err = tab.AddRowMap(inserter.Values)

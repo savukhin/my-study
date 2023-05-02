@@ -2,6 +2,7 @@ package executor
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 	"path"
 	"pi-coursework-server/planner"
@@ -133,7 +134,28 @@ func TestExecutor(t *testing.T) {
 			"password":  "Paul",
 			"excessive": "Gibson",
 		}).DoExecute(storage)
-		require.Error(t, err)
 
+		require.Error(t, err)
+	}
+
+	t.Log("Updater test")
+	{
+		storage := table.NewStorage()
+		storage.AddTable(users_table)
+		storage.AddTable(rooms_table)
+
+		updater, _ := NewUpdater("users", "username", "==", "Vitek", map[string]string{
+			"username": "Bob",
+		})
+		require.Equal(t, 2, len(storage.GetTables()))
+
+		storage2, err := updater.DoExecute(storage)
+
+		require.NoError(t, err)
+		fmt.Println("storage ", storage.MustGetTable("users"))
+		fmt.Println("storage2 ", storage2.MustGetTable("users"))
+
+		require.Equal(t, "Vitek", storage.MustGetTable("users").Values[1][0])
+		require.Equal(t, "Bob", storage2.MustGetTable("users").Values[1][0])
 	}
 }
