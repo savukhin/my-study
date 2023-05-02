@@ -271,3 +271,10 @@ func TestCheckers(t *testing.T) {
 		require.Error(t, err)
 	}
 }
+
+// func TestWholeQuery(t *testing.T) {
+// 	t.Log("Non-transaction parsing test")
+// 	{
+
+// 	}
+// }

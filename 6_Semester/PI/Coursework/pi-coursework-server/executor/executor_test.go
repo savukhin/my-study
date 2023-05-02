@@ -14,6 +14,7 @@ import (
 
 func TestExecutor(t *testing.T) {
 	exPath := utils.GetExecutablePath()
+	table.TABLES_PATH = exPath
 
 	users_table := table.MustNewTable("users",
 		[]string{"username", "password"},
@@ -36,7 +37,6 @@ func TestExecutor(t *testing.T) {
 
 	t.Log("Selector test")
 	{
-		table.TABLES_PATH = exPath
 
 		storage := table.NewStorage()
 
@@ -72,7 +72,6 @@ func TestExecutor(t *testing.T) {
 
 	t.Log("Creator test")
 	{
-		table.TABLES_PATH = exPath
 
 		storage := table.NewStorage()
 		creator := NewCreator("users", []string{"username", "password"})
@@ -93,5 +92,21 @@ func TestExecutor(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, [][]string{{"username", "password"}}, records)
+	}
+
+	t.Log("Dropper test")
+	{
+		storage := table.NewStorage()
+		storage.AddTable(users_table)
+		storage.AddTable(rooms_table)
+
+		creator := NewDropper("users")
+		require.Equal(t, 2, len(storage.GetTables()))
+
+		storage2, err := creator.DoExecute(storage)
+
+		require.NoError(t, err)
+		require.Equal(t, 1, len(storage2.GetTables()))
+		require.Equal(t, 2, len(storage.GetTables()))
 	}
 }

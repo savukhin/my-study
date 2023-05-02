@@ -3,10 +3,11 @@ package executor
 import (
 	"pi-coursework-server/planner"
 	"pi-coursework-server/table"
+	"pi-coursework-server/transaction"
 )
 
 type IExecutor interface {
-	DoExecute(*table.Storage) (table.Table, error)
+	DoExecute(*table.Storage, *transaction.TransactionFile) (table.Storage, error)
 	DoExecuteCallback(table.Storage) error
 }
 

@@ -8,8 +8,6 @@ import (
 )
 
 type Selector struct {
-	IExecutor
-
 	TableName string
 	Where     *planner.WhereConditionCheck
 	Limit     *planner.LimitCondition

@@ -156,3 +156,16 @@ func (table *Table) GetSlice(from_y int, to_y int) (Table, error) {
 
 	return *result, nil
 }
+
+func (table *Table) Copy() *Table {
+	values := make([][]string, len(table.Values))
+	columns := make([]string, len(table.Columns))
+
+	copy(values, table.Values)
+
+	copy(columns, table.Columns)
+
+	copied := MustNewTable(table.TableName, columns, values)
+
+	return copied
+}
