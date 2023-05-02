@@ -2,7 +2,6 @@ package executor
 
 import (
 	"errors"
-	"fmt"
 	"pi-coursework-server/planner"
 	"pi-coursework-server/table"
 )
@@ -56,7 +55,6 @@ func (selector *Selector) DoExecute(storage *table.Storage) (table.Table, error)
 	limit := selector.Limit
 	if limit != nil && limit.HasLimit {
 		result, err := tab.GetSlice(0, int(limit.Limit))
-		fmt.Println("LIMIT ERR", err, result.Shape)
 		if err != nil {
 			return table.Table{}, err
 		}

@@ -100,13 +100,40 @@ func TestExecutor(t *testing.T) {
 		storage.AddTable(users_table)
 		storage.AddTable(rooms_table)
 
-		creator := NewDropper("users")
+		dropper := NewDropper("users")
 		require.Equal(t, 2, len(storage.GetTables()))
 
-		storage2, err := creator.DoExecute(storage)
+		storage2, err := dropper.DoExecute(storage)
 
 		require.NoError(t, err)
 		require.Equal(t, 1, len(storage2.GetTables()))
 		require.Equal(t, 2, len(storage.GetTables()))
+	}
+
+	t.Log("Inserter test")
+	{
+		storage := table.NewStorage()
+		storage.AddTable(users_table)
+		storage.AddTable(rooms_table)
+
+		inserter := NewInserterFromMap("users", map[string]string{
+			"username": "Les",
+			"password": "Paul",
+		})
+		require.Equal(t, 2, len(storage.GetTables()))
+
+		storage2, err := inserter.DoExecute(storage)
+
+		require.NoError(t, err)
+		require.Equal(t, 2, storage.MustGetTable("users").Shape.Y)
+		require.Equal(t, 3, storage2.MustGetTable("users").Shape.Y)
+
+		_, err = NewInserterFromMap("users", map[string]string{
+			"username":  "Les",
+			"password":  "Paul",
+			"excessive": "Gibson",
+		}).DoExecute(storage)
+		require.Error(t, err)
+
 	}
 }

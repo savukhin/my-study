@@ -110,9 +110,28 @@ func (table *Table) GetColumn(column string) ([]string, error) {
 	return col, nil
 }
 
+func (table *Table) AddRowMap(values map[string]string) error {
+	if len(values) != table.Shape.X {
+		return errors.New("values must have len of " + strconv.Itoa(table.Shape.X) +
+			" but they have " + strconv.Itoa(len(values)))
+	}
+
+	resultValues := make([]string, len(values))
+	for i, column := range table.Columns {
+		val, ok := values[column]
+		if !ok {
+			return errors.New("no such column name " + column)
+		}
+		resultValues[i] = val
+	}
+
+	return table.AddRow(resultValues)
+}
+
 func (table *Table) AddRow(values []string) error {
 	if len(values) != table.Shape.X {
-		return errors.New("values must have len of " + strconv.Itoa(table.Shape.X))
+		return errors.New("values must have len of " + strconv.Itoa(table.Shape.X) +
+			" but they have " + strconv.Itoa(len(values)))
 	}
 
 	table.Values = append(table.Values, values)
