@@ -7,8 +7,6 @@ import (
 )
 
 type ComplexTransaction struct {
-	ITransaction
-
 	Executors []executor.IExecutor
 }
 
@@ -19,24 +17,24 @@ func NewComplexTransaction(executors []executor.IExecutor) *ComplexTransaction {
 }
 
 func (trans *ComplexTransaction) Eval(storage table.Storage, transactionLog *TransactionFile) (table.Storage, error) {
-	tmpStorage := *storage.Copy()
-	events := make([]*events.IEvent, len(trans.Executors))
+	nextStorage := *storage.Copy()
+	events := make([]events.IEvent, len(trans.Executors))
 
 	for i, exec := range trans.Executors {
-		var err error
-		// fmt.Println(exec)
-		tmpStorage, err = exec.DoExecute(&tmpStorage)
+		tmpStorage, event, err := exec.DoExecute(&nextStorage)
+		nextStorage = tmpStorage
 
 		if err != nil {
 			return table.Storage{}, err
 		}
 
-		events[i] = exec.ToEvent()
+		// events[i] = exec.ToEvent()
+		events[i] = event
 	}
 
 	if transactionLog != nil {
 		transactionLog.addTransaction(events, "")
 	}
 
-	return tmpStorage, nil
+	return nextStorage, nil
 }

@@ -20,17 +20,11 @@ func NewCreator(tableName string, columns []string) *Creator {
 	return creator
 }
 
-func (creator *Creator) DoExecute(storage *table.Storage) (table.Storage, error) {
+func (creator *Creator) DoExecute(storage *table.Storage) (table.Storage, events.IEvent, error) {
+	copied := storage.Copy()
 	table := table.MustNewTable(creator.TableName, creator.Columns, make([][]string, 0))
 	err := table.Save()
-	storage.AddTable(table)
-	return *storage, err
+	copied.AddTable(table)
+	return *copied, events.NewCreateEvent(creator.TableName, table.Columns), err
 	// return *table, err
-}
-
-func (creator *Creator) ToEvent() *events.Event {
-	// return &events.CreateEvent{
-	// 	TableName: creator.TableName,
-	// }
-	return nil
 }

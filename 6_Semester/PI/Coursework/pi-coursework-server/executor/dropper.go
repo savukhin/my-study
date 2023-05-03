@@ -1,12 +1,11 @@
 package executor
 
 import (
+	"pi-coursework-server/events"
 	"pi-coursework-server/table"
 )
 
 type Dropper struct {
-	IExecutor
-
 	TableName string
 }
 
@@ -16,10 +15,17 @@ func NewDropper(tableName string) *Dropper {
 	}
 }
 
-func (dropper *Dropper) DoExecute(storage *table.Storage) (table.Storage, error) {
+func (dropper *Dropper) DoExecute(storage *table.Storage) (table.Storage, events.IEvent, error) {
 	copied := storage.Copy()
 
-	err := copied.DropTable(dropper.TableName)
+	tab, err := copied.GetTable(dropper.TableName)
+	if err != nil {
+		return *storage, nil, err
+	}
 
-	return *copied, err
+	event := events.NewDropEvent(tab.TableName, tab.Columns, tab.Values)
+
+	err = copied.DropTable(dropper.TableName)
+
+	return *copied, event, err
 }

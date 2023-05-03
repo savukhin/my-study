@@ -7,8 +7,9 @@ import (
 )
 
 type IExecutor interface {
-	DoExecute(*table.Storage) (table.Storage, error)
-	ToEvent() *events.IEvent
+	DoExecute(*table.Storage) (table.Storage, events.IEvent, error)
+	// ToEvent() events.IEvent
+	// ToEvent() events.IEvent
 	// DoExecuteCallback(table.Storage) error
 }
 

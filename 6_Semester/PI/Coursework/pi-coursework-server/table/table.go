@@ -220,6 +220,20 @@ func (table *Table) UpdateRow(row int, valuesMap map[string]string) error {
 	return nil
 }
 
+func (table *Table) HardUpdateRow(row int, values []string) error {
+	if row < 0 || row >= table.Shape.Y {
+		return errors.New("row " + strconv.Itoa(row) + " out of range " + strconv.Itoa(table.Shape.Y))
+	}
+
+	if len(values) != table.Shape.X {
+		return errors.New("shape " + strconv.Itoa(len(values)) + " doesn't match ")
+	}
+
+	table.Values[row] = values
+
+	return nil
+}
+
 func (table *Table) DeleteRow(row int) error {
 	if row < 0 || row >= table.Shape.Y {
 		return errors.New("row " + strconv.Itoa(row) + " out of range " + strconv.Itoa(table.Shape.Y))

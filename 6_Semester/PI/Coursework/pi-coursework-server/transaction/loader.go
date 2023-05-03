@@ -36,6 +36,7 @@ func LoadTransactionFile() (*TransactionFile, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	r := csv.NewReader(file)
 	r.Comma = ','
@@ -95,7 +96,7 @@ func LoadTransactionFile() (*TransactionFile, error) {
 }
 
 func (logs *TransactionFile) Save() error {
-	file, err := os.OpenFile(TRANSACATION_FILE_PATH, os.O_CREATE|os.O_WRONLY, 0600)
+	file, err := os.OpenFile(TRANSACATION_FILE_PATH, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}

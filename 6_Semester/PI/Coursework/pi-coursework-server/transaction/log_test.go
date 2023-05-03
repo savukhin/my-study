@@ -6,6 +6,8 @@ import (
 	"path"
 	"path/filepath"
 	"pi-coursework-server/events"
+	"pi-coursework-server/executor"
+	"pi-coursework-server/table"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -53,7 +55,7 @@ func TestTransaction(t *testing.T) {
 		)
 
 		logs.AddDeleteEvent(
-			[]int32{3, 10, 1},
+			[]int{3, 10, 1},
 			"UsersDelete",
 			"Delete_transaction",
 		)
@@ -78,9 +80,9 @@ func TestTransaction(t *testing.T) {
 
 				require.Equal(t, event_loaded, event_local)
 				require.Equal(t, event_loaded.TableName, event_local.TableName)
-				require.Equal(t, event_loaded.Columns, event_local.Columns)
-				require.Equal(t, event_loaded.Lines, event_local.Lines)
-			} else if logs.Logs[i].ev.GetEventType() == string(events.DeletEventType) {
+				// require.Equal(t, event_loaded.Columns, event_local.Columns)
+				// require.Equal(t, event_loaded.Lines, event_local.Lines)
+			} else if logs.Logs[i].ev.GetEventType() == string(events.DeleteEventType) {
 				event_local, ok := logs.Logs[i].ev.(*events.DeleteEvent)
 				require.True(t, ok)
 				event_loaded, ok := logs_loaded.Logs[i].ev.(*events.DeleteEvent)
@@ -95,71 +97,163 @@ func TestTransaction(t *testing.T) {
 		}
 	}
 
-	t.Log("Write&Load complex transaction")
+	t.Log("Complex transaction")
 	{
-		// t1 := executor.NewCreator("users", []string{"username", "password"})
-		// t1e := executor.IExecutor(t1)
-		// require.NotNil(t, t1)
-		// require.NotNil(t, t1e)
+		storage := table.NewStorage()
 
-		// storage := table.NewStorage()
+		logs := NewTransactionFile()
+		complex := NewComplexTransaction(
+			[]executor.IExecutor{
+				executor.IExecutor(executor.NewCreator("users", []string{"username", "password"})),
+				executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Mike", "Shinoda"})),
+				executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Chester", "Bennington"})),
+				executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Bob", "Dvlan"})),
+				executor.IExecutor(executor.MustNewUpdater("users", "password", "==", "Dvlan", map[string]string{"password": "Dylan"})),
+				executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Iggy", "Pop"})),
+			},
+		)
 
-		// logs := NewTransactionFile()
-		// complex := NewComplexTransaction(
-		// 	[]executor.IExecutor{
-		// 		executor.IExecutor(executor.NewCreator("users", []string{"username", "password"})),
-		// 		executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Mike", "Shinoda"})),
-		// 		executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Chester", "Bennington"})),
-		// 	},
-		// )
+		storage2, err := complex.Eval(*storage, logs)
+		require.NoError(t, err)
+		users_table, err := storage2.GetTable("users")
+		require.NoError(t, err)
 
-		// fmt.Println("Executors = ", complex.Executors)
+		require.Equal(t, []string{"username", "password"}, users_table.Columns)
+		require.Equal(t, [][]string{
+			{"Mike", "Shinoda"},
+			{"Chester", "Bennington"},
+			{"Bob", "Dylan"},
+			{"Iggy", "Pop"},
+		}, users_table.Values)
 
-		// storage2, err := complex.Eval(*storage, logs)
-		// require.NoError(t, err)
-		// users_table, err := storage2.GetTable("users")
-		// require.NoError(t, err)
+		err = logs.Save()
+		require.NoError(t, err)
 
-		// require.Equal(t, []string{"username", "password"}, users_table.Columns)
-		// require.Equal(t, [][]string{
-		// 	{"Mike", "Shinoda"},
-		// 	{"Chester", "Bennington"},
-		// }, users_table.Values)
+		logs_loaded, err := LoadTransactionFile()
+		require.NoError(t, err)
 
-		/// ------------------------------------------------------------------------------------------- ///
+		require.Equal(t, len(logs_loaded.Logs), len(logs.Logs))
+	}
 
-		// 	logs_loaded, err := LoadTransactionFile()
-		// 	require.NoError(t, err)
+}
 
-		// 	require.Equal(t, len(logs_loaded.Logs), len(logs.Logs))
+func TestPipeline(t *testing.T) {
+	// ------ FIXTURE LIKE ------ //
+	ex, err := os.Executable()
+	require.NoError(t, err)
 
-		// 	for i := range logs_loaded.Logs {
-		// 		require.Equal(t, logs_loaded.Logs[i].TransactionName, logs.Logs[i].TransactionName)
-		// 		require.EqualValues(t, logs_loaded.Logs[i].TransactionTime.UnixNano(), logs.Logs[i].TransactionTime.UnixNano())
+	exPath := filepath.Dir(ex)
 
-		// 		if logs.Logs[i].ev.GetEventType() == string(events.CreateEventType) {
-		// 			event_loaded, ok := logs_loaded.Logs[i].ev.(*events.CreateEvent)
-		// 			require.True(t, ok)
-		// 			event_local, ok := logs.Logs[i].ev.(*events.CreateEvent)
-		// 			require.True(t, ok)
+	TRANSACATION_FILE_PATH = path.Join(exPath, "transactions.csv")
 
-		// 			require.Equal(t, event_loaded, event_local)
-		// 			require.Equal(t, event_loaded.TableName, event_local.TableName)
-		// 			require.Equal(t, event_loaded.Columns, event_local.Columns)
-		// 			require.Equal(t, event_loaded.Lines, event_local.Lines)
-		// 		} else if logs.Logs[i].ev.GetEventType() == string(events.DeletEventType) {
-		// 			event_local, ok := logs.Logs[i].ev.(*events.DeleteEvent)
-		// 			require.True(t, ok)
-		// 			event_loaded, ok := logs_loaded.Logs[i].ev.(*events.DeleteEvent)
-		// 			require.True(t, ok)
+	storage := *table.NewStorage()
 
-		// 			require.Equal(t, event_loaded, event_local)
-		// 			require.Equal(t, event_loaded.TableName, event_local.TableName)
-		// 			require.Equal(t, event_loaded.Indexes, event_local.Indexes)
-		// 		} else {
-		// 			require.NoError(t, errors.New("event type not recognized"))
-		// 		}
-		// 	}
-		// }
+	logs := NewTransactionFile()
+
+	t.Log("Complex transactions")
+	{
+		storage, err = NewComplexTransaction(
+			[]executor.IExecutor{
+				executor.IExecutor(executor.NewCreator("users", []string{"username", "password"})),
+			},
+		).Eval(storage, logs)
+		require.NoError(t, err)
+
+		storage, err = NewComplexTransaction(
+			[]executor.IExecutor{
+				executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Mike", "Shinoda"})),
+				executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Chester", "Bennington"})),
+			},
+		).Eval(storage, logs)
+		require.NoError(t, err)
+
+		storage, err = NewComplexTransaction(
+			[]executor.IExecutor{
+				executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Bob", "Dvlan"})),
+			},
+		).Eval(storage, logs)
+		require.NoError(t, err)
+
+		storage, err = NewComplexTransaction(
+			[]executor.IExecutor{
+				executor.IExecutor(executor.MustNewUpdater("users", "password", "==", "Dvlan", map[string]string{"password": "Dylan"})),
+			},
+		).Eval(storage, logs)
+		require.NoError(t, err)
+
+		users_table, err := storage.GetTable("users")
+		require.NoError(t, err)
+
+		require.Equal(t, []string{"username", "password"}, users_table.Columns)
+		require.Equal(t, [][]string{
+			{"Mike", "Shinoda"},
+			{"Chester", "Bennington"},
+			{"Bob", "Dylan"},
+		}, users_table.Values)
+
+		err = logs.Save()
+		require.NoError(t, err)
+
+		require.Equal(t, 5, len(logs.Logs))
+
+		logs_loaded, err := LoadTransactionFile()
+		require.NoError(t, err)
+
+		require.Equal(t, len(logs_loaded.Logs), len(logs.Logs))
+	}
+
+	t.Log("Rollback transactions")
+	{
+		storage, err = NewRollbackTransaction().Eval(storage, logs)
+		require.NoError(t, err)
+
+		require.Equal(t, 6, len(logs.Logs))
+
+		users_table, err := storage.GetTable("users")
+		require.NoError(t, err)
+
+		require.Equal(t, []string{"username", "password"}, users_table.Columns)
+		require.Equal(t, [][]string{
+			{"Mike", "Shinoda"},
+			{"Chester", "Bennington"},
+			{"Bob", "Dvlan"},
+		}, users_table.Values)
+
+		// Repeat
+
+		storage, err = NewRollbackTransaction().Eval(storage, logs)
+		require.NoError(t, err)
+
+		require.Equal(t, 7, len(logs.Logs))
+
+		users_table, err = storage.GetTable("users")
+		require.NoError(t, err)
+
+		require.Equal(t, []string{"username", "password"}, users_table.Columns)
+		require.Equal(t, [][]string{
+			{"Mike", "Shinoda"},
+			{"Chester", "Bennington"},
+		}, users_table.Values)
+
+		// Repeat -- this is clear
+
+		storage, err = NewRollbackTransaction().Eval(storage, logs)
+		require.NoError(t, err)
+
+		require.Equal(t, 8, len(logs.Logs))
+
+		users_table, err = storage.GetTable("users")
+		require.NoError(t, err)
+
+		require.Equal(t, []string{"username", "password"}, users_table.Columns)
+		require.Equal(t, [][]string{}, users_table.Values)
+
+		err = logs.Save()
+		require.NoError(t, err)
+
+		logs_loaded, err := LoadTransactionFile()
+		require.NoError(t, err)
+
+		require.Equal(t, len(logs_loaded.Logs), len(logs.Logs))
 	}
 }
