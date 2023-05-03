@@ -1,14 +1,15 @@
 package executor
 
 import (
+	"pi-coursework-server/events"
 	"pi-coursework-server/planner"
 	"pi-coursework-server/table"
-	"pi-coursework-server/transaction"
 )
 
 type IExecutor interface {
-	DoExecute(*table.Storage, *transaction.TransactionFile) (table.Storage, error)
-	DoExecuteCallback(table.Storage) error
+	DoExecute(*table.Storage) (table.Storage, error)
+	ToEvent() *events.IEvent
+	// DoExecuteCallback(table.Storage) error
 }
 
 func ExecuteQuery(storage *table.Storage, query string) (*table.Table, error) {

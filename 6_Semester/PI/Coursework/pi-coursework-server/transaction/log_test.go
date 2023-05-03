@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"pi-coursework-server/events"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -69,20 +70,20 @@ func TestTransaction(t *testing.T) {
 			require.Equal(t, logs_loaded.Logs[i].TransactionName, logs.Logs[i].TransactionName)
 			require.EqualValues(t, logs_loaded.Logs[i].TransactionTime.UnixNano(), logs.Logs[i].TransactionTime.UnixNano())
 
-			if logs.Logs[i].ev.GetEventType() == string(CreateEventType) {
-				event_loaded, ok := logs_loaded.Logs[i].ev.(*CreateEvent)
+			if logs.Logs[i].ev.GetEventType() == string(events.CreateEventType) {
+				event_loaded, ok := logs_loaded.Logs[i].ev.(*events.CreateEvent)
 				require.True(t, ok)
-				event_local, ok := logs.Logs[i].ev.(*CreateEvent)
+				event_local, ok := logs.Logs[i].ev.(*events.CreateEvent)
 				require.True(t, ok)
 
 				require.Equal(t, event_loaded, event_local)
 				require.Equal(t, event_loaded.TableName, event_local.TableName)
 				require.Equal(t, event_loaded.Columns, event_local.Columns)
 				require.Equal(t, event_loaded.Lines, event_local.Lines)
-			} else if logs.Logs[i].ev.GetEventType() == string(DeletEventType) {
-				event_local, ok := logs.Logs[i].ev.(*DeleteEvent)
+			} else if logs.Logs[i].ev.GetEventType() == string(events.DeletEventType) {
+				event_local, ok := logs.Logs[i].ev.(*events.DeleteEvent)
 				require.True(t, ok)
-				event_loaded, ok := logs_loaded.Logs[i].ev.(*DeleteEvent)
+				event_loaded, ok := logs_loaded.Logs[i].ev.(*events.DeleteEvent)
 				require.True(t, ok)
 
 				require.Equal(t, event_loaded, event_local)
@@ -92,6 +93,73 @@ func TestTransaction(t *testing.T) {
 				require.NoError(t, errors.New("event type not recognized"))
 			}
 		}
+	}
 
+	t.Log("Write&Load complex transaction")
+	{
+		// t1 := executor.NewCreator("users", []string{"username", "password"})
+		// t1e := executor.IExecutor(t1)
+		// require.NotNil(t, t1)
+		// require.NotNil(t, t1e)
+
+		// storage := table.NewStorage()
+
+		// logs := NewTransactionFile()
+		// complex := NewComplexTransaction(
+		// 	[]executor.IExecutor{
+		// 		executor.IExecutor(executor.NewCreator("users", []string{"username", "password"})),
+		// 		executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Mike", "Shinoda"})),
+		// 		executor.IExecutor(executor.MustNewInserter("users", []string{"username", "password"}, []string{"Chester", "Bennington"})),
+		// 	},
+		// )
+
+		// fmt.Println("Executors = ", complex.Executors)
+
+		// storage2, err := complex.Eval(*storage, logs)
+		// require.NoError(t, err)
+		// users_table, err := storage2.GetTable("users")
+		// require.NoError(t, err)
+
+		// require.Equal(t, []string{"username", "password"}, users_table.Columns)
+		// require.Equal(t, [][]string{
+		// 	{"Mike", "Shinoda"},
+		// 	{"Chester", "Bennington"},
+		// }, users_table.Values)
+
+		/// ------------------------------------------------------------------------------------------- ///
+
+		// 	logs_loaded, err := LoadTransactionFile()
+		// 	require.NoError(t, err)
+
+		// 	require.Equal(t, len(logs_loaded.Logs), len(logs.Logs))
+
+		// 	for i := range logs_loaded.Logs {
+		// 		require.Equal(t, logs_loaded.Logs[i].TransactionName, logs.Logs[i].TransactionName)
+		// 		require.EqualValues(t, logs_loaded.Logs[i].TransactionTime.UnixNano(), logs.Logs[i].TransactionTime.UnixNano())
+
+		// 		if logs.Logs[i].ev.GetEventType() == string(events.CreateEventType) {
+		// 			event_loaded, ok := logs_loaded.Logs[i].ev.(*events.CreateEvent)
+		// 			require.True(t, ok)
+		// 			event_local, ok := logs.Logs[i].ev.(*events.CreateEvent)
+		// 			require.True(t, ok)
+
+		// 			require.Equal(t, event_loaded, event_local)
+		// 			require.Equal(t, event_loaded.TableName, event_local.TableName)
+		// 			require.Equal(t, event_loaded.Columns, event_local.Columns)
+		// 			require.Equal(t, event_loaded.Lines, event_local.Lines)
+		// 		} else if logs.Logs[i].ev.GetEventType() == string(events.DeletEventType) {
+		// 			event_local, ok := logs.Logs[i].ev.(*events.DeleteEvent)
+		// 			require.True(t, ok)
+		// 			event_loaded, ok := logs_loaded.Logs[i].ev.(*events.DeleteEvent)
+		// 			require.True(t, ok)
+
+		// 			require.Equal(t, event_loaded, event_local)
+		// 			require.Equal(t, event_loaded.TableName, event_local.TableName)
+		// 			require.Equal(t, event_loaded.Indexes, event_local.Indexes)
+		// 		} else {
+		// 			require.NoError(t, errors.New("event type not recognized"))
+		// 		}
+		// 	}
+		// }
 	}
 }

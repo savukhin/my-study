@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"pi-coursework-server/events"
 	"strconv"
 	"time"
 )
@@ -13,25 +14,34 @@ func NewTransactionFile() *TransactionFile {
 	return &TransactionFile{}
 }
 
-func (logs *TransactionFile) addEvent(name string, event *Event) {
-	if name == "" {
-		name = strconv.Itoa(len(logs.Logs))
+func (logs *TransactionFile) addTransaction(events []*events.IEvent, transactionName string) {
+	if transactionName == "" {
+		transactionName = strconv.Itoa(len(logs.Logs))
 	}
+	transactionTime := time.Now()
 
-	log := &Log{
-		ev:              event.IEvent,
-		TransactionTime: time.Now(),
-		TransactionName: name,
+	for _, event := range events {
+		log := &Log{
+			ev:              *event,
+			TransactionTime: transactionTime,
+			TransactionName: transactionName,
+		}
+
+		logs.Logs = append(logs.Logs, log)
 	}
-
-	logs.Logs = append(logs.Logs, log)
 
 }
 
-func (logs *TransactionFile) AddCreateEvent(columns []string, lines [][]string, tableName, transactionName string) {
-	abs := &Event{TableName: tableName}
+func (logs *TransactionFile) AddSingleEvent(event *events.IEvent, transactionName string) {
+	evs := make([]*events.IEvent, 1)
+	evs[0] = event
+	logs.addTransaction(evs, transactionName)
+}
 
-	event := &CreateEvent{
+func (logs *TransactionFile) AddCreateEvent(columns []string, lines [][]string, tableName, transactionName string) {
+	abs := &events.Event{TableName: tableName}
+
+	event := &events.CreateEvent{
 		Lines:   lines,
 		Columns: columns,
 		Event:   abs,
@@ -39,18 +49,18 @@ func (logs *TransactionFile) AddCreateEvent(columns []string, lines [][]string, 
 
 	event.Event.IEvent = event
 
-	logs.addEvent(transactionName, event.Event)
+	logs.AddSingleEvent(&event.IEvent, transactionName)
 
 }
 
 func (logs *TransactionFile) AddDeleteEvent(indexes []int32, tableName, transactionName string) {
-	abs := &Event{TableName: tableName}
+	abs := &events.Event{TableName: tableName}
 
-	event := &DeleteEvent{
+	event := &events.DeleteEvent{
 		Indexes: indexes,
 		Event:   abs,
 	}
 	event.Event.IEvent = event
 
-	logs.addEvent(transactionName, event.Event)
+	logs.AddSingleEvent(&event.IEvent, transactionName)
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path"
+	"pi-coursework-server/events"
 	"pi-coursework-server/utils"
 	"strconv"
 	"time"
@@ -66,15 +67,15 @@ func LoadTransactionFile() (*TransactionFile, error) {
 		eventTable := line[3]
 		eventDescription := line[4]
 
-		event := &Event{TableName: eventTable}
+		event := &events.Event{TableName: eventTable}
 
-		if eventType == string(CreateEventType) {
-			ev := &CreateEvent{Event: event}
+		if eventType == string(events.CreateEventType) {
+			ev := &events.CreateEvent{Event: event}
 			json.Unmarshal([]byte(eventDescription), ev)
 
 			event.IEvent = ev
 		} else {
-			ev := &DeleteEvent{Event: event}
+			ev := &events.DeleteEvent{Event: event}
 			json.Unmarshal([]byte(eventDescription), ev)
 
 			event.IEvent = ev

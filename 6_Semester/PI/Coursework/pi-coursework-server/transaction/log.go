@@ -1,13 +1,14 @@
 package transaction
 
 import (
+	"pi-coursework-server/events"
 	"time"
 )
 
 type Log struct {
 	TransactionTime time.Time
 	TransactionName string
-	ev              IEvent
+	ev              events.IEvent
 }
 
 func (log *Log) GetEventType() string {
