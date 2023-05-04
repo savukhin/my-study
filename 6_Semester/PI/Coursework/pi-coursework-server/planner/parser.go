@@ -24,7 +24,7 @@ func ParseOneString(query string) (*Plan, error) {
 	if query == "" {
 		return plan, nil
 	}
-	username, password, err := checkAddUser(query)
+	username, password, err := CheckAddUser(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewTableGetter(PIDBUsersTable))
 		plan.Plan = append(plan.Plan, processors.NewInserter(map[string]string{"username": username, "password": password}))
@@ -32,13 +32,13 @@ func ParseOneString(query string) (*Plan, error) {
 		return plan, nil
 	}
 
-	tableName, columns, err := checkCreateTable(query)
+	tableName, columns, err := CheckCreateTable(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewTableCreator(tableName, columns))
 		return plan, nil
 	}
 
-	tableName, values, err := checkInsert(query)
+	tableName, values, err := CheckInsert(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewTableGetter(tableName))
 		plan.Plan = append(plan.Plan, processors.NewInserter(values))
@@ -46,7 +46,7 @@ func ParseOneString(query string) (*Plan, error) {
 		return plan, nil
 	}
 
-	tableName, setColumnName, setValue, where, err := checkUpdate(query)
+	tableName, setColumnName, setValue, where, err := CheckUpdate(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewTableGetter(tableName))
 		plan.Plan = append(plan.Plan, processors.NewAggregator(where.Column, where.Sign, where.ExtractValue()))
@@ -55,7 +55,7 @@ func ParseOneString(query string) (*Plan, error) {
 		return plan, nil
 	}
 
-	tableName, columns, whereCondition, limiter, err := checkSelector(query)
+	tableName, columns, whereCondition, limiter, err := CheckSelector(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewTableGetter(tableName))
 
@@ -72,14 +72,14 @@ func ParseOneString(query string) (*Plan, error) {
 		return plan, nil
 	}
 
-	tableName, err = checkDropTable(query)
+	tableName, err = CheckDropTable(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewDropper(tableName))
 
 		return plan, nil
 	}
 
-	tableName, where, err = checkDeleteRows(query)
+	tableName, where, err = CheckDeleteRows(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewTableGetter(tableName))
 		plan.Plan = append(plan.Plan, processors.NewAggregator(where.Column, where.Sign, where.ExtractValue()))
@@ -88,28 +88,28 @@ func ParseOneString(query string) (*Plan, error) {
 		return plan, nil
 	}
 
-	transaction, err := checkBeginTransaction(query)
+	transaction, err := CheckBeginTransaction(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewBeginTransaction(transaction))
 
 		return plan, nil
 	}
 
-	transaction, err = checkCommitTransaction(query)
+	transaction, err = CheckCommitTransaction(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewCommitTransaction(transaction))
 
 		return plan, nil
 	}
 
-	err = checkCommit(query)
+	err = CheckCommit(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewCommit())
 
 		return plan, nil
 	}
 
-	err = checkRollback(query)
+	err = CheckRollback(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewRollback())
 

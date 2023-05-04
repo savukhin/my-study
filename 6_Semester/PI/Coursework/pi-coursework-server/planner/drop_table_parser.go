@@ -14,7 +14,7 @@ type DropTableGroup struct {
 	TableName string `regroup:"table_name"`
 }
 
-func checkDropTable(query string) (tableName string, err error) {
+func CheckDropTable(query string) (tableName string, err error) {
 	elem := &DropTableGroup{}
 	err = dropTableRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {

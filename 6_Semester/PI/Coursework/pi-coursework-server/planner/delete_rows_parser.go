@@ -1,6 +1,7 @@
 package planner
 
 import (
+	"pi-coursework-server/utils"
 	"strings"
 
 	"github.com/oriser/regroup"
@@ -12,10 +13,10 @@ var (
 
 type DeleteRowsGroup struct {
 	TableName string `regroup:"table_name"`
-	WhereCondition
+	utils.WhereCondition
 }
 
-func checkDeleteRows(query string) (tableName string, where WhereCondition, err error) {
+func CheckDeleteRows(query string) (tableName string, where utils.WhereCondition, err error) {
 	elem := &DeleteRowsGroup{}
 	err = deleteRowsRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {

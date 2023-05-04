@@ -139,7 +139,7 @@ func TestParserFail(t *testing.T) {
 func TestCheckers(t *testing.T) {
 	t.Log("check selector")
 	{
-		table, columns, condition, limit, err := checkSelector("select surname,   name, room  from employee   ")
+		table, columns, condition, limit, err := CheckSelector("select surname,   name, room  from employee   ")
 		require.NoError(t, err)
 		require.Equal(t, table, "employee")
 		require.Equal(t, columns, []string{"surname", "name", "room"})
@@ -147,7 +147,7 @@ func TestCheckers(t *testing.T) {
 		require.Equal(t, limit.HasLimit, false)
 		require.Equal(t, limit.LimitStr, "")
 
-		table, columns, condition, limit, err = checkSelector("select surname, name, room from employee WHerE 	 room == '4'    LIMIT	 10 ")
+		table, columns, condition, limit, err = CheckSelector("select surname, name, room from employee WHerE 	 room == '4'    LIMIT	 10 ")
 		require.NoError(t, err)
 		require.Equal(t, table, "employee")
 		require.Equal(t, columns, []string{"surname", "name", "room"})
@@ -159,75 +159,75 @@ func TestCheckers(t *testing.T) {
 		require.Equal(t, limit.HasLimit, true)
 		require.EqualValues(t, limit.Limit, 10)
 
-		_, _, _, _, err = checkSelector("select surname, name, room from employee WHerE 	 room = '4'    LIMIT	 10 ")
+		_, _, _, _, err = CheckSelector("select surname, name, room from employee WHerE 	 room = '4'    LIMIT	 10 ")
 		require.Error(t, err)
 	}
 
 	t.Log("drop table")
 	{
-		table, err := checkDropTable("drop table adf")
+		table, err := CheckDropTable("drop table adf")
 		require.NoError(t, err)
 		require.Equal(t, table, "adf")
 
-		_, err = checkDropTable("drop table ")
+		_, err = CheckDropTable("drop table ")
 		require.Error(t, err)
 	}
 
 	t.Log("delete rows")
 	{
-		table, where, err := checkDeleteRows("delete from adf WhERe room != '4'")
+		table, where, err := CheckDeleteRows("delete from adf WhERe room != '4'")
 		require.NoError(t, err)
 		require.Equal(t, table, "adf")
 		require.Equal(t, where.Column, "room")
 		require.Equal(t, where.Sign, "!=")
 		require.Equal(t, where.ValueStr, "4")
 
-		_, _, err = checkDeleteRows("delete from WhERe room != '4'")
+		_, _, err = CheckDeleteRows("delete from WhERe room != '4'")
 		require.Error(t, err)
 
-		_, _, err = checkDeleteRows("delete from adf room != '4'")
+		_, _, err = CheckDeleteRows("delete from adf room != '4'")
 		require.Error(t, err)
 
-		_, _, err = checkDeleteRows("delete from adf WHERE room = '4'")
+		_, _, err = CheckDeleteRows("delete from adf WHERE room = '4'")
 		require.Error(t, err)
 	}
 
 	t.Log("transactions")
 	{
-		transaction, err := checkBeginTransaction("begin hiring")
+		transaction, err := CheckBeginTransaction("begin hiring")
 		require.NoError(t, err)
 		require.Equal(t, transaction, "hiring")
 
-		_, err = checkBeginTransaction("begin")
+		_, err = CheckBeginTransaction("begin")
 		require.Error(t, err)
 
-		_, err = checkBeginTransaction("bEgiN    hiring")
+		_, err = CheckBeginTransaction("bEgiN    hiring")
 		require.NoError(t, err)
 		require.Equal(t, transaction, "hiring")
 
-		_, err = checkCommitTransaction("CommIT hiring")
+		_, err = CheckCommitTransaction("CommIT hiring")
 		require.NoError(t, err)
 		require.Equal(t, transaction, "hiring")
 
-		_, err = checkCommitTransaction("Commit hiring limit 10")
+		_, err = CheckCommitTransaction("Commit hiring limit 10")
 		require.Error(t, err)
 
-		err = checkCommit("CommIT")
+		err = CheckCommit("CommIT")
 		require.NoError(t, err)
 
-		err = checkCommit("Commit hiring")
+		err = CheckCommit("Commit hiring")
 		require.Error(t, err)
 
-		err = checkRollback("RoLLbAck")
+		err = CheckRollback("RoLLbAck")
 		require.NoError(t, err)
 
-		err = checkCommit("ROLback hiring")
+		err = CheckCommit("ROLback hiring")
 		require.Error(t, err)
 	}
 
 	t.Log("updates")
 	{
-		tableName, setColumnName, setValue, where, err := checkUpdate("update employee set room = '14' where index == 1")
+		tableName, setColumnName, setValue, where, err := CheckUpdate("update employee set room = '14' where index == 1")
 		require.NoError(t, err)
 		require.Equal(t, tableName, "employee")
 		require.Equal(t, setColumnName, "room")
@@ -240,34 +240,34 @@ func TestCheckers(t *testing.T) {
 
 	t.Log("add user")
 	{
-		username, password, err := checkAddUser("adD   User USErNAME     	passwOrd    PASsWOrd")
+		username, password, err := CheckAddUser("adD   User USErNAME     	passwOrd    PASsWOrd")
 		require.NoError(t, err)
 		require.Equal(t, username, "USErNAME")
 		require.Equal(t, password, "PASsWOrd")
 
-		_, _, err = checkAddUser("adD   User USERNAME     	passOrd    PASSWORD")
+		_, _, err = CheckAddUser("adD   User USERNAME     	passOrd    PASSWORD")
 		require.Error(t, err)
 	}
 
 	t.Log("insert")
 	{
-		tableName, columns, err := checkInsert("  inSerT   INto   mploy3e2e( col1, col2,COL3,  	COl4  )   values  (  val1,   val2,val3  , val4  )   ")
+		tableName, columns, err := CheckInsert("  inSerT   INto   mploy3e2e( col1, col2,COL3,  	COl4  )   values  (  val1,   val2,val3  , val4  )   ")
 		require.NoError(t, err)
 		require.Equal(t, tableName, "mploy3e2e")
 		require.Equal(t, columns, map[string]string{"col1": "val1", "col2": "val2", "COL3": "val3", "COl4": "val4"})
 
-		tableName, columns, err = checkInsert("inSerT INto mploy3e2e 	( col1 ) values (val1)   ")
+		tableName, columns, err = CheckInsert("inSerT INto mploy3e2e 	( col1 ) values (val1)   ")
 		require.NoError(t, err)
 		require.Equal(t, tableName, "mploy3e2e")
 		require.Equal(t, columns, map[string]string{"col1": "val1"})
 
-		_, _, err = checkInsert("insert into employee(col1) values (val1,)   ")
+		_, _, err = CheckInsert("insert into employee(col1) values (val1,)   ")
 		require.Error(t, err)
 
-		_, _, err = checkInsert("insert into employee (col2, col3) values (val1, val2,)   ")
+		_, _, err = CheckInsert("insert into employee (col2, col3) values (val1, val2,)   ")
 		require.Error(t, err)
 
-		_, _, err = checkInsert("insert into employee() values ()   ")
+		_, _, err = CheckInsert("insert into employee() values ()   ")
 		require.Error(t, err)
 	}
 }

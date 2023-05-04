@@ -2,19 +2,21 @@ package executor
 
 import (
 	"errors"
-	"pi-coursework-server/planner"
 	"pi-coursework-server/table"
+	"pi-coursework-server/utils"
 )
 
 type Selector struct {
 	TableName string
-	Where     *planner.WhereConditionCheck
-	Limit     *planner.LimitCondition
+	Columns   []string
+	Where     *utils.WhereConditionCheck
+	Limit     *utils.LimitCondition
 }
 
-func NewSelector(tableName string, where *planner.WhereConditionCheck, limit *planner.LimitCondition) *Selector {
+func NewSelector(tableName string, columns []string, where *utils.WhereConditionCheck, limit *utils.LimitCondition) *Selector {
 	return &Selector{
 		TableName: tableName,
+		Columns:   columns,
 		Where:     where,
 		Limit:     limit,
 	}
@@ -62,5 +64,7 @@ func (selector *Selector) DoExecute(storage *table.Storage) (table.Table, error)
 		tab = result
 	}
 
-	return tab, nil
+	diff := utils.DifferenceArrays(tab.Columns, selector.Columns)
+
+	return tab.DropColumns(diff)
 }

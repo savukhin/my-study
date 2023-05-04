@@ -2,7 +2,6 @@ package executor
 
 import (
 	"pi-coursework-server/events"
-	"pi-coursework-server/planner"
 	"pi-coursework-server/table"
 	"pi-coursework-server/utils"
 	"testing"
@@ -45,27 +44,29 @@ func TestExecutor(t *testing.T) {
 
 		selector := NewSelector(
 			"rooms",
-			planner.NewWhereConditionCheck("floor", "==", "15"),
+			[]string{"area"},
+			utils.NewWhereConditionCheck("floor", "==", "15"),
 			nil,
 		)
 
 		table, err := selector.DoExecute(storage)
 		require.NoError(t, err)
 		require.Equal(t, "rooms", table.TableName)
-		require.Equal(t, []string{"floor", "area"}, table.Columns)
-		require.Equal(t, [][]string{{"15", "12"}, {"15", "10"}, {"15", "20"}}, table.Values)
+		require.Equal(t, []string{"area"}, table.Columns)
+		require.Equal(t, [][]string{{"12"}, {"10"}, {"20"}}, table.Values)
 
 		selector = NewSelector(
 			"rooms",
-			planner.NewWhereConditionCheck("area", "!=", "12"),
-			planner.NewLimitCondition(3),
+			[]string{"floor"},
+			utils.NewWhereConditionCheck("area", "!=", "12"),
+			utils.NewLimitCondition(3),
 		)
 
 		table, err = selector.DoExecute(storage)
 		require.NoError(t, err)
 		require.Equal(t, "rooms", table.TableName)
-		require.Equal(t, []string{"floor", "area"}, table.Columns)
-		require.Equal(t, [][]string{{"15", "10"}, {"15", "20"}, {"12", "10"}}, table.Values)
+		require.Equal(t, []string{"floor"}, table.Columns)
+		require.Equal(t, [][]string{{"15"}, {"15"}, {"12"}}, table.Values)
 	}
 
 	t.Log("Creator test")

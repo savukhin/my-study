@@ -2,7 +2,7 @@ package api
 
 type QeuryDTO struct {
 	Query string `json:"query" binding:"required"`
-	Token string `form:"token" binding:"required"`
+	// Token string `form:"token" binding:"required"`
 }
 
 type AuthDTO struct {

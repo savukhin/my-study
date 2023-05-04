@@ -79,6 +79,7 @@ func TestSaveAndLoad(t *testing.T) {
 			{"4", "10", "2", "Igor"},
 			{"3", "15", "3", "Jora"},
 		})
+		require.NoError(t, err)
 
 		storage := NewStorage()
 		storage.AddTable(users)

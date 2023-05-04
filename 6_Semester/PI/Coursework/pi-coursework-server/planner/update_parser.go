@@ -1,6 +1,7 @@
 package planner
 
 import (
+	"pi-coursework-server/utils"
 	"strings"
 
 	"github.com/oriser/regroup"
@@ -14,10 +15,10 @@ type UpdateGroup struct {
 	TableName     string `regroup:"table_name"`
 	SetColumnName string `regroup:"set_column_name"`
 	SetValue      string `regroup:"set_value"`
-	WhereCondition
+	utils.WhereCondition
 }
 
-func checkUpdate(query string) (tableName, setColumnName, setValue string, where WhereCondition, err error) {
+func CheckUpdate(query string) (tableName, setColumnName, setValue string, where utils.WhereCondition, err error) {
 	elem := &UpdateGroup{}
 	err = updateRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {

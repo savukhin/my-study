@@ -10,6 +10,7 @@ import (
 
 var (
 	beginTransactionRegexp  = regroup.MustCompile(`(?i)^begin\s+(?P<transaction_name>\w+)$`)
+	beginRegexp             = regexp.MustCompile(`(?i)^begin$`)
 	commitTransactionRegexp = regroup.MustCompile(`(?i)^commit\s+(?P<transaction_name>\w+)$`)
 	commitRegexp            = regexp.MustCompile(`(?i)^commit$`)
 	rollbackRegexp          = regexp.MustCompile(`(?i)^rollback$`)
@@ -19,7 +20,7 @@ type TransactionGroup struct {
 	TransactionName string `regroup:"transaction_name"`
 }
 
-func checkBeginTransaction(query string) (transactionName string, err error) {
+func CheckBeginTransaction(query string) (transactionName string, err error) {
 	elem := &TransactionGroup{}
 	err = beginTransactionRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {
@@ -32,7 +33,18 @@ func checkBeginTransaction(query string) (transactionName string, err error) {
 	return
 }
 
-func checkCommitTransaction(query string) (transactionName string, err error) {
+func CheckBegin(query string) (err error) {
+	matched := beginRegexp.MatchString(strings.TrimSpace(query))
+	if !matched {
+		err = errors.New("not matched")
+		return
+	}
+	err = nil
+
+	return
+}
+
+func CheckCommitTransaction(query string) (transactionName string, err error) {
 	elem := &TransactionGroup{}
 	err = commitTransactionRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {
@@ -45,7 +57,7 @@ func checkCommitTransaction(query string) (transactionName string, err error) {
 	return
 }
 
-func checkCommit(query string) (err error) {
+func CheckCommit(query string) (err error) {
 	matched := commitRegexp.MatchString(strings.TrimSpace(query))
 	if !matched {
 		err = errors.New("not matched")
@@ -56,7 +68,7 @@ func checkCommit(query string) (err error) {
 	return
 }
 
-func checkRollback(query string) (err error) {
+func CheckRollback(query string) (err error) {
 	matched := rollbackRegexp.MatchString(strings.TrimSpace(query))
 	if !matched {
 		err = errors.New("not matched")

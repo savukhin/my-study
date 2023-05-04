@@ -17,7 +17,7 @@ type InsertGroup struct {
 	Values    string `regroup:"values"`
 }
 
-func checkInsert(query string) (tableName string, values map[string]string, err error) {
+func CheckInsert(query string) (tableName string, values map[string]string, err error) {
 	elem := &InsertGroup{}
 	err = insertRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {

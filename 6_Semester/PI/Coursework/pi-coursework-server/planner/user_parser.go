@@ -15,7 +15,7 @@ type AddUserGroup struct {
 	Password string `regroup:"password"`
 }
 
-func checkAddUser(query string) (username, password string, err error) {
+func CheckAddUser(query string) (username, password string, err error) {
 	elem := &AddUserGroup{}
 	err = addUserRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {

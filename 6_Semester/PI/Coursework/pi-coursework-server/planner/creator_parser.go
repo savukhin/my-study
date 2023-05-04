@@ -15,7 +15,7 @@ type CreateTableGroup struct {
 	Columns   string `regroup:"columns"`
 }
 
-func checkCreateTable(query string) (tableName string, columns []string, err error) {
+func CheckCreateTable(query string) (tableName string, columns []string, err error) {
 	elem := &CreateTableGroup{}
 	err = createTableRegexp.MatchToTarget(strings.TrimSpace(query), elem)
 	if err != nil {

@@ -1,9 +1,9 @@
 package table
 
 import (
+	"bytes"
 	"encoding/csv"
 	"errors"
-	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -56,6 +56,47 @@ func MustNewTable(tableName string, columns []string, values [][]string) *Table 
 	return tab
 }
 
+func (table *Table) DropColumns(columns []string) (Table, error) {
+	// copied := table.Copy()
+
+	// columnsIndexes := make(map[string]int)
+	xToDrop := make(map[int]bool)
+	for _, column := range columns {
+		val, ok := table.columnsSet[column]
+		if !ok {
+			return *table, errors.New("column " + column + " does not exists")
+		}
+		xToDrop[val] = true
+	}
+
+	newColumns := make([]string, 0)
+	for x, column := range table.Columns {
+		_, ok := xToDrop[x]
+
+		if !ok {
+			newColumns = append(newColumns, column)
+		}
+	}
+
+	newValues := make([][]string, table.Shape.Y)
+
+	for y := 0; y < table.Shape.Y; y++ {
+		row := make([]string, 0)
+
+		for x, val := range table.Values[y] {
+			_, ok := xToDrop[x]
+
+			if !ok {
+				row = append(row, val)
+			}
+		}
+
+		newValues[y] = row
+	}
+
+	return *MustNewTable(table.TableName, newColumns, newValues), nil
+}
+
 func NewTable(tableName string, columns []string, values [][]string) (*Table, error) {
 	tab := &Table{
 		TableName: tableName,
@@ -70,7 +111,8 @@ func NewTable(tableName string, columns []string, values [][]string) (*Table, er
 
 	for y := range values {
 		if len(columns) != len(values[y]) {
-			return nil, errors.New("values not match columns shape")
+			return nil, errors.New("values not match columns shape: columns shape is " +
+				strconv.Itoa(len(columns)) + " and values shape is " + strconv.Itoa(len(values)))
 		}
 	}
 
@@ -88,9 +130,6 @@ func NewTable(tableName string, columns []string, values [][]string) (*Table, er
 func (table *Table) Save() error {
 	filePath := path.Join(TABLES_PATH, table.TableName+".csv")
 	os.MkdirAll(TABLES_PATH, os.ModePerm)
-
-	fmt.Println("Save path is ", filePath)
-	// time.Sleep(20 * time.Second)
 
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
@@ -264,4 +303,24 @@ func (table *Table) Copy() *Table {
 	copied := MustNewTable(table.TableName, columns, values)
 
 	return copied
+}
+
+func (table *Table) ToString() string {
+	records := [][]string{table.Columns}
+	for y := 0; y < table.Shape.Y; y++ {
+		line := make([]string, 0)
+		for x := 0; x < table.Shape.X; x++ {
+			line = append(line, table.Values[y][x])
+		}
+
+		records = append(records, line)
+	}
+
+	buf := bytes.NewBufferString("")
+
+	w := csv.NewWriter(buf)
+	w.Comma = ','
+	w.WriteAll(records) // calls Flush internally
+
+	return buf.String()
 }
