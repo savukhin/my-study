@@ -1,9 +1,6 @@
 package executor
 
 import (
-	"encoding/csv"
-	"os"
-	"path"
 	"pi-coursework-server/events"
 	"pi-coursework-server/planner"
 	"pi-coursework-server/table"
@@ -73,7 +70,6 @@ func TestExecutor(t *testing.T) {
 
 	t.Log("Creator test")
 	{
-
 		storage := table.NewStorage()
 		creator := NewCreator("users", []string{"username", "password"})
 		require.Equal(t, 0, len(storage.GetTables()))
@@ -86,17 +82,6 @@ func TestExecutor(t *testing.T) {
 		createEvent, ok := event.(*events.CreateEvent)
 		require.True(t, ok)
 		require.Equal(t, "users", createEvent.TableName)
-
-		file, err := os.OpenFile(path.Join(exPath, "users.csv"), os.O_CREATE|os.O_RDONLY, 0600)
-		require.NoError(t, err)
-		defer file.Close()
-
-		r := csv.NewReader(file)
-		r.Comma = ','
-		records, err := r.ReadAll()
-		require.NoError(t, err)
-
-		require.Equal(t, [][]string{{"username", "password"}}, records)
 	}
 
 	t.Log("Dropper test")

@@ -145,6 +145,7 @@ func TestPipeline(t *testing.T) {
 	exPath := filepath.Dir(ex)
 
 	TRANSACATION_FILE_PATH = path.Join(exPath, "transactions.csv")
+	table.TABLES_PATH = path.Join(exPath, "tables")
 
 	storage := *table.NewStorage()
 
@@ -202,12 +203,34 @@ func TestPipeline(t *testing.T) {
 		require.Equal(t, len(logs_loaded.Logs), len(logs.Logs))
 	}
 
+	t.Log("Write transactions 1")
+	{
+		storage, err = NewWriteTransaction().Eval(storage, logs)
+		require.NoError(t, err)
+
+		require.Equal(t, 6, len(logs.Logs))
+
+		storage2, err := table.LoadStorage()
+		require.NoError(t, err)
+
+		users, err := storage2.GetTable("users")
+		require.NoError(t, err)
+
+		require.Equal(t, "users", users.TableName)
+		require.Equal(t, []string{"username", "password"}, users.Columns)
+		require.Equal(t, [][]string{
+			{"Mike", "Shinoda"},
+			{"Chester", "Bennington"},
+			{"Bob", "Dylan"},
+		}, users.Values)
+	}
+
 	t.Log("Rollback transactions")
 	{
 		storage, err = NewRollbackTransaction().Eval(storage, logs)
 		require.NoError(t, err)
 
-		require.Equal(t, 6, len(logs.Logs))
+		require.Equal(t, 7, len(logs.Logs))
 
 		users_table, err := storage.GetTable("users")
 		require.NoError(t, err)
@@ -224,7 +247,7 @@ func TestPipeline(t *testing.T) {
 		storage, err = NewRollbackTransaction().Eval(storage, logs)
 		require.NoError(t, err)
 
-		require.Equal(t, 7, len(logs.Logs))
+		require.Equal(t, 8, len(logs.Logs))
 
 		users_table, err = storage.GetTable("users")
 		require.NoError(t, err)
@@ -234,15 +257,37 @@ func TestPipeline(t *testing.T) {
 			{"Mike", "Shinoda"},
 			{"Chester", "Bennington"},
 		}, users_table.Values)
+	}
 
-		// Repeat -- this is clear
+	t.Log("Write transactions 2")
+	{
+		storage, err = NewWriteTransaction().Eval(storage, logs)
+		require.NoError(t, err)
 
+		require.Equal(t, 9, len(logs.Logs))
+
+		storage2, err := table.LoadStorage()
+		require.NoError(t, err)
+
+		users, err := storage2.GetTable("users")
+		require.NoError(t, err)
+
+		require.Equal(t, "users", users.TableName)
+		require.Equal(t, []string{"username", "password"}, users.Columns)
+		require.Equal(t, [][]string{
+			{"Mike", "Shinoda"},
+			{"Chester", "Bennington"},
+		}, users.Values)
+	}
+
+	t.Log("Rollback transactions 2")
+	{
 		storage, err = NewRollbackTransaction().Eval(storage, logs)
 		require.NoError(t, err)
 
-		require.Equal(t, 8, len(logs.Logs))
+		require.Equal(t, 10, len(logs.Logs))
 
-		users_table, err = storage.GetTable("users")
+		users_table, err := storage.GetTable("users")
 		require.NoError(t, err)
 
 		require.Equal(t, []string{"username", "password"}, users_table.Columns)
@@ -255,5 +300,39 @@ func TestPipeline(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, len(logs_loaded.Logs), len(logs.Logs))
+	}
+
+	t.Log("Rest rollback transactions (clear)")
+	{
+		// Repeat -- this is clear
+
+		storage, err = NewRollbackTransaction().Eval(storage, logs)
+		require.NoError(t, err)
+
+		require.Equal(t, 11, len(logs.Logs))
+
+		_, err := storage.GetTable("users")
+		require.Error(t, err)
+
+		err = logs.Save()
+		require.NoError(t, err)
+
+		logs_loaded, err := LoadTransactionFile()
+		require.NoError(t, err)
+
+		require.Equal(t, len(logs_loaded.Logs), len(logs.Logs))
+	}
+
+	t.Log("Rest write transactions")
+	{
+		storage, err = NewWriteTransaction().Eval(storage, logs)
+		require.NoError(t, err)
+
+		require.Equal(t, 12, len(logs.Logs))
+
+		storage2, err := table.LoadStorage()
+		require.NoError(t, err)
+
+		require.Equal(t, 0, len(storage2.GetTables()))
 	}
 }

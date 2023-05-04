@@ -12,7 +12,7 @@ import (
 )
 
 func createRecords(records [][]string, fileName string) error {
-	file, err := os.OpenFile(path.Join(TABLES_PATH, fileName), os.O_CREATE|os.O_WRONLY, 0600)
+	file, err := os.OpenFile(path.Join(TABLES_PATH, fileName), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
@@ -83,6 +83,5 @@ func TestLoader(t *testing.T) {
 		require.Equal(t, users[1:], usersTable.Values)
 		require.Equal(t, rooms[0], roomsTable.Columns)
 		require.Equal(t, rooms[1:], roomsTable.Values)
-
 	}
 }

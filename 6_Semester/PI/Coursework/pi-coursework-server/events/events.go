@@ -6,6 +6,7 @@ type IEvent interface {
 	GetDescription() string
 	GetEventType() string
 	GetTableName() string
+	Apply() error
 }
 
 type Event struct {
@@ -49,8 +50,12 @@ type DropEvent struct {
 }
 
 type RollbackEvent struct {
-	IEvent
+	IEvent          `json:"-"`
 	TransactionName string `json:"rollback_transaction_name"`
+}
+
+type WriteEvent struct {
+	IEvent `json:"-"`
 }
 
 type EventType string
@@ -62,6 +67,7 @@ const (
 	DeleteEventType   EventType = "delete"
 	DropEventType     EventType = "drop"
 	RollbackEventType EventType = "rollback"
+	WriteEventType    EventType = "write"
 )
 
 func NewCreateEvent(tableName string, columns []string) *CreateEvent {
@@ -141,11 +147,19 @@ func NewRollbackEvent(transactionName string) *RollbackEvent {
 	return event
 }
 
+func NewWriteEvent() *WriteEvent {
+	return &WriteEvent{}
+}
+
 func (event *Event) GetTableName() string {
 	return event.TableName
 }
 
 func (event *RollbackEvent) GetTableName() string {
+	return "None"
+}
+
+func (event *WriteEvent) GetTableName() string {
 	return "None"
 }
 
@@ -174,6 +188,10 @@ func (event *RollbackEvent) GetDescription() string {
 	return string(result)
 }
 
+func (event *WriteEvent) GetDescription() string {
+	return "{}"
+}
+
 func (event *CreateEvent) GetEventType() string {
 	return string(CreateEventType)
 }
@@ -196,4 +214,8 @@ func (event *UpdateEvent) GetEventType() string {
 
 func (event *RollbackEvent) GetEventType() string {
 	return string(RollbackEventType)
+}
+
+func (event *WriteEvent) GetEventType() string {
+	return string(WriteEventType)
 }

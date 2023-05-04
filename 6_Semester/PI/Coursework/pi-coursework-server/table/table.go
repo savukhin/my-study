@@ -3,6 +3,7 @@ package table
 import (
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -86,8 +87,12 @@ func NewTable(tableName string, columns []string, values [][]string) (*Table, er
 
 func (table *Table) Save() error {
 	filePath := path.Join(TABLES_PATH, table.TableName+".csv")
+	os.MkdirAll(TABLES_PATH, os.ModePerm)
 
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0600)
+	fmt.Println("Save path is ", filePath)
+	// time.Sleep(20 * time.Second)
+
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
@@ -97,7 +102,7 @@ func (table *Table) Save() error {
 	for y := 0; y < table.Shape.Y; y++ {
 		line := make([]string, 0)
 		for x := 0; x < table.Shape.X; x++ {
-			line = append(line, table.Values[x][y])
+			line = append(line, table.Values[y][x])
 		}
 
 		records = append(records, line)

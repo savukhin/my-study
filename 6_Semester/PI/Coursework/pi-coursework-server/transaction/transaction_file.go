@@ -39,6 +39,11 @@ func (logs *TransactionFile) addTransaction(evs []events.IEvent, transactionName
 			logs.ActiveComplexTransactions.Pop()
 			return
 		}
+
+		_, ok = evs[0].(*events.WriteEvent)
+		if ok {
+			return
+		}
 	}
 
 	logs.ActiveComplexTransactions.Push(transactionName)
@@ -98,4 +103,14 @@ func (logs *TransactionFile) GetRollbackedComplexTransactionByName(name string) 
 
 func (logs *TransactionFile) GetLastActiveComplexTransactionName() string {
 	return logs.ActiveComplexTransactions.Top()
+}
+
+func (logs *TransactionFile) GetLastWriteIndex() int {
+	for i := len(logs.Logs) - 1; i >= 0; i-- {
+		_, ok := logs.Logs[i].ev.(*events.WriteEvent)
+		if ok {
+			return i
+		}
+	}
+	return -1
 }

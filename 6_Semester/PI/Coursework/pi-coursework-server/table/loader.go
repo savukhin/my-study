@@ -3,6 +3,8 @@ package table
 import (
 	"encoding/csv"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"pi-coursework-server/utils"
@@ -24,6 +26,8 @@ func LoadTable(fileNameCsv string) (*Table, error) {
 	}
 
 	filePath := path.Join(TABLES_PATH, fileNameCsv)
+	q, _ := ioutil.ReadFile(filePath)
+	fmt.Println(tableName, string(q))
 	file, err := os.OpenFile(filePath, os.O_RDONLY, 0600)
 	if err != nil {
 		return nil, err
@@ -39,10 +43,6 @@ func LoadTable(fileNameCsv string) (*Table, error) {
 		return nil, err
 	}
 
-	if len(records) < 2 {
-		return nil, errors.New("no data")
-	}
-
 	table := &Table{
 		TableName: tableName,
 		Columns:   records[0],
@@ -53,11 +53,16 @@ func LoadTable(fileNameCsv string) (*Table, error) {
 		},
 	}
 
+	fmt.Println(table)
+
 	return table, nil
 }
 
 func LoadAllTables() ([]*Table, error) {
 	dir, err := os.ReadDir(TABLES_PATH)
+	fmt.Println("Load path is ", TABLES_PATH)
+	// time.Sleep(100 * time.Second)
+	fmt.Println("dir is ", dir, "len is", len(dir))
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +70,7 @@ func LoadAllTables() ([]*Table, error) {
 	tables := make([]*Table, 0)
 
 	for _, file := range dir {
+		fmt.Println("dir file is ", file)
 		if file.IsDir() {
 			continue
 		}

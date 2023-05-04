@@ -22,9 +22,13 @@ func NewCreator(tableName string, columns []string) *Creator {
 
 func (creator *Creator) DoExecute(storage *table.Storage) (table.Storage, events.IEvent, error) {
 	copied := storage.Copy()
-	table := table.MustNewTable(creator.TableName, creator.Columns, make([][]string, 0))
-	err := table.Save()
-	copied.AddTable(table)
+	table, err := table.NewTable(creator.TableName, creator.Columns, make([][]string, 0))
+	if err != nil {
+		return *copied, nil, err
+	}
+
+	// err := table.Save()
+	err = copied.AddTable(table)
+
 	return *copied, events.NewCreateEvent(creator.TableName, table.Columns), err
-	// return *table, err
 }
