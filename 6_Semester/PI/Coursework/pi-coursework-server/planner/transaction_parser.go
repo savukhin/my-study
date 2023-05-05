@@ -11,6 +11,7 @@ import (
 var (
 	beginTransactionRegexp  = regroup.MustCompile(`(?i)^begin\s+(?P<transaction_name>\w+)$`)
 	beginRegexp             = regexp.MustCompile(`(?i)^begin$`)
+	writeRegexp             = regexp.MustCompile(`(?i)^write$`)
 	commitTransactionRegexp = regroup.MustCompile(`(?i)^commit\s+(?P<transaction_name>\w+)$`)
 	commitRegexp            = regexp.MustCompile(`(?i)^commit$`)
 	rollbackRegexp          = regexp.MustCompile(`(?i)^rollback$`)
@@ -68,8 +69,17 @@ func CheckCommit(query string) (err error) {
 	return
 }
 
-func CheckRollback(query string) (err error) {
+func CheckRollback(query string) error {
 	matched := rollbackRegexp.MatchString(strings.TrimSpace(query))
+	if !matched {
+		return errors.New("not matched")
+	}
+
+	return nil
+}
+
+func CheckWrite(query string) (err error) {
+	matched := writeRegexp.MatchString(strings.TrimSpace(query))
 	if !matched {
 		err = errors.New("not matched")
 		return

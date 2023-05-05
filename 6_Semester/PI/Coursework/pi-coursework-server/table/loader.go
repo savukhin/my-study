@@ -63,8 +63,12 @@ func LoadAllTables() ([]*Table, error) {
 	fmt.Println("Load path is ", TABLES_PATH)
 	// time.Sleep(100 * time.Second)
 	fmt.Println("dir is ", dir, "len is", len(dir))
+
 	if err != nil {
-		return nil, err
+		fmt.Println("before", err, TABLES_PATH)
+		err2 := os.MkdirAll(TABLES_PATH, os.ModePerm)
+		fmt.Println("after", err2)
+		return make([]*Table, 0), err
 	}
 
 	tables := make([]*Table, 0)

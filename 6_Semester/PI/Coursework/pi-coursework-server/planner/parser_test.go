@@ -161,6 +161,14 @@ func TestCheckers(t *testing.T) {
 
 		_, _, _, _, err = CheckSelector("select surname, name, room from employee WHerE 	 room = '4'    LIMIT	 10 ")
 		require.Error(t, err)
+
+		table, columns, condition, limit, err = CheckSelector("select * from employee   ")
+		require.NoError(t, err)
+		require.Equal(t, table, "employee")
+		require.Equal(t, columns, []string{"*"})
+		require.Equal(t, condition.HasWhere, false)
+		require.Equal(t, limit.HasLimit, false)
+		require.Equal(t, limit.LimitStr, "")
 	}
 
 	t.Log("drop table")

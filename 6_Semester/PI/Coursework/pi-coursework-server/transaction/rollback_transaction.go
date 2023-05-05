@@ -15,7 +15,11 @@ func NewRollbackTransaction() *RollbackTransaction {
 func (trans *RollbackTransaction) Eval(storage table.Storage, transactionLog *TransactionFile) (table.Storage, error) {
 	nextStorage := *storage.Copy()
 
-	complexTransName := transactionLog.GetLastActiveComplexTransactionName()
+	complexTransName, err := transactionLog.GetLastActiveComplexTransactionName()
+	if err != nil {
+		return storage, nil
+	}
+
 	complexTransRollbacked, err := transactionLog.GetRollbackedComplexTransactionByName(complexTransName)
 	if err != nil {
 		return storage, err

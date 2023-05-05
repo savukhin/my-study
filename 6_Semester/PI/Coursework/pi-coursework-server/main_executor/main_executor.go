@@ -2,6 +2,7 @@ package mainexecutor
 
 import (
 	"errors"
+	"fmt"
 	"pi-coursework-server/executor"
 	"pi-coursework-server/planner"
 	"pi-coursework-server/table"
@@ -14,11 +15,31 @@ var (
 	cachedStorage   *table.Storage
 )
 
-func checkAndTryRollback(query string) error {
-	err := planner.CheckRollback(query)
-	if err == nil {
+func LoadInitialState() error {
+	fmt.Println("Loading storage")
+	cachedStorage2, err := table.LoadStorage()
+	if err != nil {
 		return err
 	}
+	cachedStorage = cachedStorage2
+
+	fmt.Println("Loading transaction file")
+	log, err := transaction.LoadTransactionFile()
+	if err != nil {
+		return err
+	}
+	transactionFile = log
+
+	return nil
+}
+
+func checkAndTryRollback(query string) error {
+	err := planner.CheckRollback(query)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Catched rollback in query", query)
 
 	storage, err := transaction.NewRollbackTransaction().Eval(*cachedStorage, transactionFile)
 	if err != nil {
@@ -30,7 +51,13 @@ func checkAndTryRollback(query string) error {
 }
 
 func checkAndTryWrite(query string) error {
-	storage, err := transaction.NewRollbackTransaction().Eval(*cachedStorage, transactionFile)
+	err := planner.CheckWrite(query)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Catched write in query", query)
+
+	storage, err := transaction.NewWriteTransaction().Eval(*cachedStorage, transactionFile)
 	if err != nil {
 		return err
 	}
@@ -41,9 +68,12 @@ func checkAndTryWrite(query string) error {
 
 func checkAndTrySelect(query string) (string, error) {
 	tableName, columns, whereCondition, limiter, err := planner.CheckSelector(query)
+	fmt.Println("check select", err)
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Println("Catched selector in query", query)
 
 	exec := executor.NewSelector(tableName, columns, &whereCondition, &limiter)
 	// exec.Columns
@@ -87,6 +117,8 @@ func ExecuteWholeQuery(query string) (string, error) {
 	response := make([]string, 0)
 
 	for _, command := range commands {
+		fmt.Println(command)
+
 		command = strings.Trim(command, " \t\n")
 
 		if command == "" {
@@ -94,13 +126,13 @@ func ExecuteWholeQuery(query string) (string, error) {
 		}
 
 		if len(currentBlock) == 0 && !wasBegin {
-			str, err := checkAndTrySingleLineCommand(query)
+			str, err := checkAndTrySingleLineCommand(command)
 			if err == nil {
 				response = append(response, str)
 				continue
 			}
 
-			err = planner.CheckBegin(query)
+			err = planner.CheckBegin(command)
 			if err == nil {
 				wasBegin = true
 				continue
@@ -109,12 +141,13 @@ func ExecuteWholeQuery(query string) (string, error) {
 			return "", errors.New("no begin in transaction")
 		}
 
-		if err := planner.CheckBegin(query); err == nil {
+		if err := planner.CheckBegin(command); err == nil {
 			return "", errors.New("more than one begin in transaction")
 		}
 
-		if err := planner.CheckCommit(query); err == nil {
+		if err := planner.CheckCommit(command); err == nil {
 			complex := transaction.NewComplexTransaction(currentBlock)
+			fmt.Println("Catched complex in query", currentBlock)
 			storage2, err := complex.Eval(*cachedStorage, transactionFile)
 			if err != nil {
 				return "", err
@@ -122,6 +155,9 @@ func ExecuteWholeQuery(query string) (string, error) {
 			cachedStorage = &storage2
 
 			currentBlock = make([]executor.IExecutor, 0)
+			wasBegin = false
+
+			continue
 		}
 
 		exec, err := planner.ParseOneQueryForExecutor(command)

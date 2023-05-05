@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	createTableRegexp = regroup.MustCompile(`^(?i)create\s+table\s+(?P<table_name>\w+)\s+\((?P<columns>(?:\w+,\s*)*\w+)\)$`)
+	createTableRegexp = regroup.MustCompile(`^(?i)create\s+table\s+(?P<table_name>\w+)\s*\((?P<columns>(?:\w+,\s*)*\w+)\)$`)
 )
 
 type CreateTableGroup struct {

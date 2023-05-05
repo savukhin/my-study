@@ -47,6 +47,8 @@ func (logs *TransactionFile) addTransaction(evs []events.IEvent, transactionName
 	}
 
 	logs.ActiveComplexTransactions.Push(transactionName)
+
+	logs.Save()
 }
 
 func (logs *TransactionFile) AddSingleEvent(event events.IEvent, transactionName string) {
@@ -101,7 +103,7 @@ func (logs *TransactionFile) GetRollbackedComplexTransactionByName(name string) 
 	return *trans, nil
 }
 
-func (logs *TransactionFile) GetLastActiveComplexTransactionName() string {
+func (logs *TransactionFile) GetLastActiveComplexTransactionName() (string, error) {
 	return logs.ActiveComplexTransactions.Top()
 }
 

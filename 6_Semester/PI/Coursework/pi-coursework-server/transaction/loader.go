@@ -31,10 +31,16 @@ var (
 	}
 )
 
+func CreateEmptyTransactionFile() (*TransactionFile, error) {
+	logs := NewTransactionFile()
+	err := logs.Save()
+	return logs, err
+}
+
 func LoadTransactionFile() (*TransactionFile, error) {
 	file, err := os.OpenFile(TRANSACATION_FILE_PATH, os.O_RDONLY, 0600)
 	if err != nil {
-		return nil, err
+		return CreateEmptyTransactionFile()
 	}
 	defer file.Close()
 
