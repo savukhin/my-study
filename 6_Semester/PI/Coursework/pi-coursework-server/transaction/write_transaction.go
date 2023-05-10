@@ -46,7 +46,7 @@ func (trans *WriteTransaction) Eval(storage table.Storage, transactionLog *Trans
 	storage.Save()
 
 	if transactionLog != nil {
-		transactionLog.AddSingleEvent(event, "")
+		transactionLog.AddSingleEvent(event, "", -1, true)
 	}
 
 	return storage, nil

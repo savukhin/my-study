@@ -7,9 +7,9 @@ import (
 	"os"
 	"path"
 	"pi-coursework-server/events"
+	"pi-coursework-server/table"
 	"pi-coursework-server/utils"
 	"strconv"
-	"time"
 )
 
 var (
@@ -18,26 +18,48 @@ var (
 		"time",
 		"transaction_name",
 		"event_type",
-		"event_table",
+		// "event_table",
 		"event_description",
-	}
-
-	columnsMap = map[string]int{
-		"time":              0,
-		"transaction_name":  1,
-		"event_type":        2,
-		"event_table":       3,
-		"event_description": 4,
 	}
 )
 
-func CreateEmptyTransactionFile() (*TransactionFile, error) {
+func CreateEmptyTransactionFile() (*TransactionFile, *table.Storage, error) {
 	logs := NewTransactionFile()
+	storage := table.NewStorage()
 	err := logs.Save()
-	return logs, err
+	return logs, storage, err
 }
 
-func LoadTransactionFile() (*TransactionFile, error) {
+func AddBlock(block []events.IEvent, storage *table.Storage, transactionFile *TransactionFile,
+	prevTransactionName string, prevTransactionTimeUnix int,
+) (*table.Storage, *TransactionFile, error) {
+
+	if len(block) == 1 {
+		_, ok := block[0].(*events.WriteEvent)
+		if ok {
+			transactionFile.addTransaction(block, prevTransactionName, prevTransactionTimeUnix, false)
+			return storage, transactionFile, nil
+		}
+	}
+
+	trans, err := FromEvents(block)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	st, err := trans.Eval(*storage, transactionFile, prevTransactionName, prevTransactionTimeUnix, false)
+	if err != nil {
+		return nil, nil, err
+	}
+	storage = &st
+
+	// transactionFile.addTransaction(block, prevTransactionName, prevTransactionTimeUnix, false)
+
+	return storage, transactionFile, nil
+
+}
+
+func LoadTransactionFile() (*TransactionFile, *table.Storage, error) {
 	file, err := os.OpenFile(TRANSACATION_FILE_PATH, os.O_RDONLY, 0600)
 	if err != nil {
 		return CreateEmptyTransactionFile()
@@ -51,30 +73,37 @@ func LoadTransactionFile() (*TransactionFile, error) {
 	records, err := r.ReadAll()
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for i := range columns {
 		if columns[i] != records[0][i] {
-			return nil, errors.New("error in transaction file - columns doesn't match")
+			return nil, nil, errors.New("error in transaction file - columns doesn't match")
 		}
 	}
 
 	transactionFile := NewTransactionFile()
+	storage := table.NewStorage()
+
+	lastCopmlexTransactionEvents := make([]events.IEvent, 0)
+	prevTransactionName := ""
+	prevTransactionTimeUnix := -1
 
 	for _, line := range records[1:] {
 		transactionTimeUnix, err := strconv.Atoi(line[0])
 		if err != nil {
-			return nil, errors.New("error in transaction file")
+			return nil, nil, errors.New("error in transaction file")
 		}
-		transactionTime := time.Unix(0, int64(transactionTimeUnix))
+		// transactionTime := time.Unix(0, int64(transactionTimeUnix))
 		transactionName := line[1]
 
 		eventType := line[2]
-		eventTable := line[3]
-		eventDescription := line[4]
+		// eventTable := line[3]
+		eventDescription := line[3]
 
-		event := &events.Event{TableName: eventTable}
+		// event := &events.Event{TableName: eventTable}
+		event := &events.Event{}
+		// isComplex := false
 
 		if eventType == string(events.CreateEventType) {
 			Ev := &events.CreateEvent{Event: event}
@@ -112,20 +141,51 @@ func LoadTransactionFile() (*TransactionFile, error) {
 
 			event.IEvent = Ev
 		} else {
-			return nil, errors.New("unknown event type")
+			return nil, nil, errors.New("unknown event type")
 		}
 
-		log := &Log{
-			TransactionTime: transactionTime,
-			TransactionName: transactionName,
-			Ev:              event.IEvent,
+		// if isComplex {
+		if len(lastCopmlexTransactionEvents) > 0 && prevTransactionName != transactionName {
+			// execs, err := executor.FromEvents(lastCopmlexTransactionEvents)
+
+			// trans := NewComplexTransaction(execs)
+			st, logs, err := AddBlock(lastCopmlexTransactionEvents, storage, transactionFile, prevTransactionName, prevTransactionTimeUnix)
+			if err != nil {
+				return nil, nil, err
+			}
+			storage = st
+			transactionFile = logs
+
+			lastCopmlexTransactionEvents = make([]events.IEvent, 0)
 		}
 
-		transactionFile.Logs = append(transactionFile.Logs, log)
+		lastCopmlexTransactionEvents = append(lastCopmlexTransactionEvents, event.IEvent)
+		// } else {
+
+		// }
+
+		// log := &Log{
+		// 	TransactionTime: transactionTime,
+		// 	TransactionName: transactionName,
+		// 	Ev:              event.IEvent,
+		// }
+
+		// transactionFile.Logs = append(transactionFile.Logs, log)
+		prevTransactionName = transactionName
+		prevTransactionTimeUnix = transactionTimeUnix
 
 	}
 
-	return transactionFile, nil
+	if len(lastCopmlexTransactionEvents) > 0 {
+		st, logs, err := AddBlock(lastCopmlexTransactionEvents, storage, transactionFile, prevTransactionName, prevTransactionTimeUnix)
+		if err != nil {
+			return nil, nil, err
+		}
+		storage = st
+		transactionFile = logs
+	}
+
+	return transactionFile, storage, nil
 }
 
 func (logs *TransactionFile) Save() error {
@@ -142,7 +202,7 @@ func (logs *TransactionFile) Save() error {
 			strconv.Itoa(int(log.TransactionTime.UnixNano())),
 			log.TransactionName,
 			log.GetEventType(),
-			log.GetTableName(),
+			// log.GetTableName(),
 			log.Ev.GetDescription(),
 		}
 

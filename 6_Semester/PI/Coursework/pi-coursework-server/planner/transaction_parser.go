@@ -2,6 +2,7 @@ package planner
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -71,6 +72,7 @@ func CheckCommit(query string) (err error) {
 
 func CheckRollback(query string) error {
 	matched := rollbackRegexp.MatchString(strings.TrimSpace(query))
+	fmt.Println("Matched rollback is ", matched)
 	if !matched {
 		return errors.New("not matched")
 	}

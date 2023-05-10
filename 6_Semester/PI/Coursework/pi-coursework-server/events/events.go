@@ -11,7 +11,7 @@ type IEvent interface {
 
 type Event struct {
 	IEvent
-	TableName string
+	// TableName string
 }
 
 type CreateEvent struct {
@@ -75,7 +75,7 @@ const (
 
 func NewCreateEvent(tableName string, columns []string) *CreateEvent {
 	abs := &Event{
-		TableName: tableName,
+		// TableName: tableName,
 	}
 	event := &CreateEvent{
 		TableName: tableName,
@@ -88,7 +88,7 @@ func NewCreateEvent(tableName string, columns []string) *CreateEvent {
 
 func NewDropEvent(tableName string, columns []string, values [][]string) *DropEvent {
 	abs := &Event{
-		TableName: tableName,
+		// TableName: tableName,
 	}
 	event := &DropEvent{
 		TableName: tableName,
@@ -102,7 +102,7 @@ func NewDropEvent(tableName string, columns []string, values [][]string) *DropEv
 
 func NewInsertEvent(tableName string, values []string, index int) *InsertEvent {
 	abs := &Event{
-		TableName: tableName,
+		// TableName: tableName,
 	}
 	event := &InsertEvent{
 		TableName: tableName,
@@ -116,7 +116,7 @@ func NewInsertEvent(tableName string, values []string, index int) *InsertEvent {
 
 func NewDeleteEvent(tableName string, indexes []int, deletedValues map[int][]string) *DeleteEvent {
 	abs := &Event{
-		TableName: tableName,
+		// TableName: tableName,
 	}
 	event := &DeleteEvent{
 		TableName:     tableName,
@@ -130,7 +130,7 @@ func NewDeleteEvent(tableName string, indexes []int, deletedValues map[int][]str
 
 func NewUpdateEvent(tableName string, indexes []int, values map[int][]string, oldValues map[int][]string) *UpdateEvent {
 	abs := &Event{
-		TableName: tableName,
+		// TableName: tableName,
 	}
 	event := &UpdateEvent{
 		TableName: tableName,
@@ -145,7 +145,7 @@ func NewUpdateEvent(tableName string, indexes []int, values map[int][]string, ol
 
 func NewRollbackEvent(transactionName string) *RollbackEvent {
 	abs := &Event{
-		TableName: "None",
+		// TableName: "None",
 	}
 	event := &RollbackEvent{
 		TransactionName: transactionName,
@@ -158,7 +158,7 @@ func NewRollbackEvent(transactionName string) *RollbackEvent {
 
 func NewWriteEvent() *WriteEvent {
 	abs := &Event{
-		TableName: "None",
+		// TableName: "None",
 	}
 	event := &WriteEvent{}
 
@@ -166,7 +166,26 @@ func NewWriteEvent() *WriteEvent {
 	return event
 }
 
-func (event *Event) GetTableName() string {
+//	func (event *Event) GetTableName() string {
+//		return event.TableName
+//	}
+
+func (event *CreateEvent) GetTableName() string {
+	return event.TableName
+}
+
+func (event *InsertEvent) GetTableName() string {
+	return event.TableName
+}
+func (event *DeleteEvent) GetTableName() string {
+	return event.TableName
+}
+
+func (event *DropEvent) GetTableName() string {
+	return event.TableName
+}
+
+func (event *UpdateEvent) GetTableName() string {
 	return event.TableName
 }
 
@@ -179,7 +198,10 @@ func (event *WriteEvent) GetTableName() string {
 }
 
 func (event *CreateEvent) GetDescription() string {
-	result, _ := json.Marshal(event)
+	result, err := json.Marshal(event)
+	if err != nil {
+		panic(err)
+	}
 	return string(result)
 }
 

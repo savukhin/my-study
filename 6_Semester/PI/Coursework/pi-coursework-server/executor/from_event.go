@@ -34,7 +34,7 @@ func RollbackEvent(event events.IEvent) (IExecutor, error) {
 		return updater, nil
 	}
 
-	return nil, errors.New("no such executor for this event")
+	return nil, errors.New("no such rollback executor for this event")
 }
 
 func FromEvent(event events.IEvent) (IExecutor, error) {
@@ -60,6 +60,7 @@ func FromEvent(event events.IEvent) (IExecutor, error) {
 			insertEvent.Index: insertEvent.Values,
 		}
 
+		// return NewInserter(insertEvent.TableName, insertEvent.Index, insertEvent.Values)
 		return NewMassInserter(insertEvent.TableName, []int{insertEvent.Index}, values)
 	}
 
@@ -71,4 +72,16 @@ func FromEvent(event events.IEvent) (IExecutor, error) {
 	}
 
 	return nil, errors.New("no such executor for this event")
+}
+
+func FromEvents(eventsArr []events.IEvent) ([]IExecutor, error) {
+	result := make([]IExecutor, len(eventsArr))
+	for i, ev := range eventsArr {
+		exec, err := FromEvent(ev)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = exec
+	}
+	return result, nil
 }

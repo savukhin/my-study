@@ -32,9 +32,14 @@ func (massDeleter *MassDeleter) DoExecute(storage *table.Storage) (table.Storage
 	indexes := massDeleter.Indexes
 	sort.Ints(indexes)
 	y := 0
+	deletedValues := make(map[int][]string, 0)
 
 	for yAbsolute < initialShapeY && yAbsolute < tab.Shape.Y && i < len(indexes) {
 		if yAbsolute == indexes[i] {
+			row := make([]string, tab.Shape.X)
+			copy(row, tab.Values[y])
+			deletedValues[y] = row
+
 			err := tab.DeleteRow(y)
 
 			if err != nil {
@@ -52,5 +57,5 @@ func (massDeleter *MassDeleter) DoExecute(storage *table.Storage) (table.Storage
 		return *copied, nil, errors.New("data corrupted")
 	}
 
-	return *copied, nil, nil
+	return *copied, events.NewDeleteEvent(massDeleter.TableName, indexes, deletedValues), nil
 }

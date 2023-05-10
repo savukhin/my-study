@@ -30,9 +30,14 @@ func (massUpdater *MassUpdater) DoExecute(storage *table.Storage) (table.Storage
 	indexes := massUpdater.Indexes
 	sort.Ints(indexes)
 	i := 0
+	oldValues := make(map[int][]string)
 
 	for y, _ := range tab.Values {
 		if y == indexes[i] {
+			row := make([]string, tab.Shape.X)
+			copy(row, tab.Values[y])
+			oldValues[y] = row
+
 			values := massUpdater.Values[y]
 
 			err := tab.HardUpdateRow(y, values)
@@ -43,5 +48,5 @@ func (massUpdater *MassUpdater) DoExecute(storage *table.Storage) (table.Storage
 			i++
 		}
 	}
-	return *copied, nil, nil
+	return *copied, events.NewUpdateEvent(massUpdater.TableName, massUpdater.Indexes, massUpdater.Values, oldValues), nil
 }

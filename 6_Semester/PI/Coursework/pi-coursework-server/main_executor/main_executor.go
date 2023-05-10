@@ -5,78 +5,9 @@ import (
 	"fmt"
 	"pi-coursework-server/executor"
 	"pi-coursework-server/planner"
-	"pi-coursework-server/table"
 	"pi-coursework-server/transaction"
 	"strings"
 )
-
-var (
-	transactionFile *transaction.TransactionFile
-	cachedStorage   *table.Storage
-)
-
-func LoadInitialState() error {
-	fmt.Println("Loading storage")
-	cachedStorage2, err := table.LoadStorage()
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Loading transaction file")
-	logs, err := transaction.LoadTransactionFile()
-	if err != nil {
-		return err
-	}
-
-	// complexTransName, err := transactionFile.GetLastActiveComplexTransactionName()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// complexTransRollbacked, err := transactionFile.GetComplexTransactionByName(complexTransName)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// cachedStorage2, err = complexTransRollbacked.Eval(*cachedStorage2, nil)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// event := events.NewRollbackEvent(complexTransName)
-
-	// transactionLog.AddSingleEvent(event, "")
-
-	ind := logs.GetLastWriteIndex()
-	if ind == -1 {
-		ind = 0
-	}
-	fmt.Println("Loading", len(logs.Logs)-ind, "events")
-	for _, log := range logs.Logs[ind:] {
-		// log.
-		exec, err := executor.FromEvent(log.Ev)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("Executing", log.Ev, "exec =", exec)
-
-		st, _, err := exec.DoExecute(cachedStorage2)
-		if err != nil {
-			return err
-		}
-		cachedStorage2 = &st
-	}
-
-	cachedStorage = cachedStorage2
-	transactionFile = logs
-
-	fmt.Println("Cached storage", cachedStorage)
-	musicians, _ := cachedStorage.GetTable("musicians")
-	fmt.Println("musicians", musicians)
-
-	return nil
-}
 
 func checkAndTryRollback(query string) (bool, error) {
 	err := planner.CheckRollback(query)
@@ -86,7 +17,7 @@ func checkAndTryRollback(query string) (bool, error) {
 
 	fmt.Println("Catched rollback in query", query)
 
-	storage, err := transaction.NewRollbackTransaction().Eval(*cachedStorage, transactionFile)
+	storage, err := transaction.NewRollbackTransaction().Eval(*cachedStorage, transactionFile, "", -1, true)
 	if err != nil {
 		return true, err
 	}
@@ -132,16 +63,25 @@ func checkAndTrySelect(query string) (string, bool, error) {
 }
 
 func checkAndTrySingleLineCommand(query string) (string, bool, error) {
-	if checked, err := checkAndTryRollback(query); err == nil {
+	checked, err := checkAndTryRollback(query)
+	if err == nil {
 		return "ok", checked, nil
+	} else if checked {
+		return "err", checked, err
 	}
 
-	if checked, err := checkAndTryWrite(query); err == nil {
+	checked, err = checkAndTryWrite(query)
+	if err == nil {
 		return "ok", checked, nil
+	} else if checked {
+		return "err", checked, err
 	}
 
-	if str, checked, err := checkAndTrySelect(query); err == nil {
+	str, checked, err := checkAndTrySelect(query)
+	if err == nil {
 		return str, checked, nil
+	} else if checked {
+		return "err", checked, err
 	}
 
 	return "", false, errors.New("single-line command not recognized")
@@ -199,7 +139,7 @@ func ExecuteWholeQuery(query string) (string, error) {
 		if err := planner.CheckCommit(command); err == nil {
 			complex := transaction.NewComplexTransaction(currentBlock)
 			fmt.Println("Catched complex in query", currentBlock)
-			storage2, err := complex.Eval(*cachedStorage, transactionFile)
+			storage2, err := complex.Eval(*cachedStorage, transactionFile, "", -1, true)
 			if err != nil {
 				return "", err
 			}

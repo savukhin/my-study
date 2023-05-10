@@ -36,5 +36,7 @@ func (massInserter *MassInserter) DoExecute(storage *table.Storage) (table.Stora
 
 		err = tab.AddRow(values)
 	}
-	return *copied, nil, err
+	ind := massInserter.AfterIndexes[0]
+
+	return *copied, events.NewInsertEvent(tab.TableName, massInserter.InsertingValues[ind], ind), err
 }

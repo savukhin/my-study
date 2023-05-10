@@ -22,7 +22,7 @@ func (storage *Storage) GetTables() map[string]*Table {
 func (storage *Storage) AddTable(new_table *Table) error {
 	_, ok := storage.tables[new_table.TableName]
 	if ok {
-		return errors.New("table" + new_table.TableName + "already exists")
+		return errors.New("table " + new_table.TableName + " already exists")
 	}
 
 	copied := new_table.Copy()

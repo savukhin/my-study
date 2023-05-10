@@ -16,6 +16,9 @@ import (
 var (
 	API_ADDRESS      = GetEnvDefault("API_ADDRESS", "http://localhost:8080")
 	QUERY_ADDRESS, _ = url.JoinPath(API_ADDRESS, "api", "v1", "execute-query")
+	HELP             = `
+CREATE 
+	`
 )
 
 const (
@@ -40,6 +43,13 @@ func NewResponse(msg string, stat http.ConnState) Response {
 
 func processQuery(query string, responseChan chan Response) {
 	// time.Sleep(1 * time.Second)
+
+	command := strings.TrimSpace(query)
+	command = strings.ToLower(command)
+	if command == "help" {
+		responseChan <- NewResponse(HELP, 200)
+		return
+	}
 
 	data, _ := json.Marshal(map[string]string{
 		"query": query,

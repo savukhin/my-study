@@ -2,7 +2,6 @@ package executor
 
 import (
 	"errors"
-	"fmt"
 	"pi-coursework-server/table"
 	"pi-coursework-server/utils"
 )
@@ -67,15 +66,11 @@ func (selector *Selector) DoExecute(storage *table.Storage) (table.Table, error)
 
 	var selectedToDrop []string
 
-	fmt.Println("selector columns", selector.Columns)
-
 	if len(selector.Columns) == 1 && selector.Columns[0] == "*" {
 		selectedToDrop = []string{}
 	} else {
 		selectedToDrop = utils.DifferenceArrays(tab.Columns, selector.Columns)
 	}
-
-	fmt.Println("dropping from table", tab, "columns", selectedToDrop)
 
 	return tab.DropColumns(selectedToDrop)
 }
