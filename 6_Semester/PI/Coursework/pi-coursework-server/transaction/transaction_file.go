@@ -25,7 +25,7 @@ func (logs *TransactionFile) addTransaction(evs []events.IEvent, transactionName
 
 	for _, event := range evs {
 		log := &Log{
-			ev:              event,
+			Ev:              event,
 			TransactionTime: transactionTime,
 			TransactionName: transactionName,
 		}
@@ -91,7 +91,26 @@ func (logs *TransactionFile) GetRollbackedComplexTransactionByName(name string) 
 			continue
 		}
 
-		exec, err := executor.RollbackEvent(log.ev)
+		exec, err := executor.RollbackEvent(log.Ev)
+		if err != nil {
+			return ComplexTransaction{}, err
+		}
+
+		executors = append(executors, exec)
+	}
+
+	trans := NewComplexTransaction(utils.Reverse(executors))
+	return *trans, nil
+}
+
+func (logs *TransactionFile) GetComplexTransactionByName(name string) (ComplexTransaction, error) {
+	executors := make([]executor.IExecutor, 0)
+	for _, log := range logs.Logs {
+		if log.TransactionName != name {
+			continue
+		}
+
+		exec, err := executor.FromEvent(log.Ev)
 		if err != nil {
 			return ComplexTransaction{}, err
 		}
@@ -109,7 +128,7 @@ func (logs *TransactionFile) GetLastActiveComplexTransactionName() (string, erro
 
 func (logs *TransactionFile) GetLastWriteIndex() int {
 	for i := len(logs.Logs) - 1; i >= 0; i-- {
-		_, ok := logs.Logs[i].ev.(*events.WriteEvent)
+		_, ok := logs.Logs[i].Ev.(*events.WriteEvent)
 		if ok {
 			return i
 		}

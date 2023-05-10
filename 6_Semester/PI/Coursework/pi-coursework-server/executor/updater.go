@@ -59,6 +59,7 @@ func (updater *Updater) DoExecute(storage *table.Storage) (table.Storage, events
 
 	yUpdate := make([]int, 0)
 	oldValues := make(map[int][]string)
+	newValues := make(map[int][]string)
 
 	for y, row := range tab.Values {
 		if (row[columnInd] == updater.CompareValues && updater.Sign == EqualWhereSign) || (row[columnInd] != updater.CompareValues && updater.Sign == NotEqualWhereSign) {
@@ -66,12 +67,14 @@ func (updater *Updater) DoExecute(storage *table.Storage) (table.Storage, events
 			oldValues[y] = make([]string, len(row))
 			copy(oldValues[y], row)
 
-			err := tab.UpdateRow(y, updater.NewValues)
+			line, err := tab.UpdateRow(y, updater.NewValues)
 			if err != nil {
 				return *copied, nil, err
 			}
+
+			newValues[y] = line
 		}
 	}
 
-	return *copied, events.NewUpdateEvent(tab.TableName, yUpdate, updater.NewValues, oldValues), nil
+	return *copied, events.NewUpdateEvent(tab.TableName, yUpdate, newValues, oldValues), nil
 }

@@ -49,6 +49,6 @@ func (inserter *Inserter) DoExecute(storage *table.Storage) (table.Storage, even
 		return *copied, nil, err
 	}
 
-	err = tab.AddRowMap(inserter.Values)
-	return *copied, events.NewInsertEvent(inserter.TableName, inserter.Values, tab.Shape.Y-1), err
+	line, err := tab.AddRowMap(inserter.Values)
+	return *copied, events.NewInsertEvent(inserter.TableName, line, tab.Shape.Y-1), err
 }

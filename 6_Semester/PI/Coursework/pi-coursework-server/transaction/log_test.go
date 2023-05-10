@@ -23,9 +23,9 @@ func TestTransaction(t *testing.T) {
 	TRANSACATION_FILE_PATH = path.Join(exPath, "transactions.csv")
 
 	{
-		// ev := &CreateEvent{}
+		// Ev := &CreateEvent{}
 		// var down IEvent
-		// down = ev
+		// down = Ev
 		// _, ok := down.(*DeleteEvent)
 		// fmt.Println("REAL OK")
 		// require.True(t, ok)
@@ -72,20 +72,20 @@ func TestTransaction(t *testing.T) {
 			require.Equal(t, logs_loaded.Logs[i].TransactionName, logs.Logs[i].TransactionName)
 			require.EqualValues(t, logs_loaded.Logs[i].TransactionTime.UnixNano(), logs.Logs[i].TransactionTime.UnixNano())
 
-			if logs.Logs[i].ev.GetEventType() == string(events.CreateEventType) {
-				event_loaded, ok := logs_loaded.Logs[i].ev.(*events.CreateEvent)
+			if logs.Logs[i].Ev.GetEventType() == string(events.CreateEventType) {
+				event_loaded, ok := logs_loaded.Logs[i].Ev.(*events.CreateEvent)
 				require.True(t, ok)
-				event_local, ok := logs.Logs[i].ev.(*events.CreateEvent)
+				event_local, ok := logs.Logs[i].Ev.(*events.CreateEvent)
 				require.True(t, ok)
 
 				require.Equal(t, event_loaded, event_local)
 				require.Equal(t, event_loaded.TableName, event_local.TableName)
 				// require.Equal(t, event_loaded.Columns, event_local.Columns)
 				// require.Equal(t, event_loaded.Lines, event_local.Lines)
-			} else if logs.Logs[i].ev.GetEventType() == string(events.DeleteEventType) {
-				event_local, ok := logs.Logs[i].ev.(*events.DeleteEvent)
+			} else if logs.Logs[i].Ev.GetEventType() == string(events.DeleteEventType) {
+				event_local, ok := logs.Logs[i].Ev.(*events.DeleteEvent)
 				require.True(t, ok)
-				event_loaded, ok := logs_loaded.Logs[i].ev.(*events.DeleteEvent)
+				event_loaded, ok := logs_loaded.Logs[i].Ev.(*events.DeleteEvent)
 				require.True(t, ok)
 
 				require.Equal(t, event_loaded, event_local)

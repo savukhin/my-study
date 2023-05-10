@@ -21,18 +21,19 @@ type CreateEvent struct {
 }
 
 type InsertEvent struct {
-	*Event    `json:"-"`
-	Values    map[string]string `json:"values"`
-	Index     int               `json:"index"`
-	TableName string            `json:"table_name"`
+	*Event `json:"-"`
+	Values []string `json:"values"`
+	// Values    map[string]string `json:"values"`
+	Index     int    `json:"index"`
+	TableName string `json:"table_name"`
 }
 
 type UpdateEvent struct {
 	*Event    `json:"-"`
-	Indexes   []int             `json:"index"`
-	Values    map[string]string `json:"values"`
-	OldValues map[int][]string  `json:"old_values"`
-	TableName string            `json:"table_name"`
+	Indexes   []int            `json:"index"`
+	Values    map[int][]string `json:"values"`
+	OldValues map[int][]string `json:"old_values"`
+	TableName string           `json:"table_name"`
 }
 
 type DeleteEvent struct {
@@ -50,12 +51,14 @@ type DropEvent struct {
 }
 
 type RollbackEvent struct {
-	IEvent          `json:"-"`
+	// IEvent          `json:"-"`
+	*Event          `json:"-"`
 	TransactionName string `json:"rollback_transaction_name"`
 }
 
 type WriteEvent struct {
-	IEvent `json:"-"`
+	// IEvent `json:"-"`
+	*Event `json:"-"`
 }
 
 type EventType string
@@ -97,7 +100,7 @@ func NewDropEvent(tableName string, columns []string, values [][]string) *DropEv
 	return event
 }
 
-func NewInsertEvent(tableName string, values map[string]string, index int) *InsertEvent {
+func NewInsertEvent(tableName string, values []string, index int) *InsertEvent {
 	abs := &Event{
 		TableName: tableName,
 	}
@@ -125,7 +128,7 @@ func NewDeleteEvent(tableName string, indexes []int, deletedValues map[int][]str
 	return event
 }
 
-func NewUpdateEvent(tableName string, indexes []int, values map[string]string, oldValues map[int][]string) *UpdateEvent {
+func NewUpdateEvent(tableName string, indexes []int, values map[int][]string, oldValues map[int][]string) *UpdateEvent {
 	abs := &Event{
 		TableName: tableName,
 	}
@@ -141,14 +144,26 @@ func NewUpdateEvent(tableName string, indexes []int, values map[string]string, o
 }
 
 func NewRollbackEvent(transactionName string) *RollbackEvent {
+	abs := &Event{
+		TableName: "None",
+	}
 	event := &RollbackEvent{
 		TransactionName: transactionName,
+		Event:           abs,
 	}
+	abs.IEvent = event
+
 	return event
 }
 
 func NewWriteEvent() *WriteEvent {
-	return &WriteEvent{}
+	abs := &Event{
+		TableName: "None",
+	}
+	event := &WriteEvent{}
+
+	abs.IEvent = event
+	return event
 }
 
 func (event *Event) GetTableName() string {

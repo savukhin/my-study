@@ -39,9 +39,9 @@ func (trans *WriteTransaction) Eval(storage table.Storage, transactionLog *Trans
 
 	for i := lastWriteIndex + 1; i < len(transactionLog.Logs); i++ {
 		fmt.Println("i = ", i)
-		ev := transactionLog.Logs[i].ev
-		// ev.Apply()
-		ev.GetDescription()
+		Ev := transactionLog.Logs[i].Ev
+		// Ev.Apply()
+		Ev.GetDescription()
 	}
 	storage.Save()
 

@@ -126,7 +126,7 @@ func TestExecutor(t *testing.T) {
 		insertEvent, ok := event.(*events.InsertEvent)
 		require.True(t, ok)
 		require.Equal(t, "users", insertEvent.TableName)
-		require.Equal(t, map[string]string{"username": "Les", "password": "Paul"}, insertEvent.Values)
+		require.Equal(t, []string{"Les", "Paul"}, insertEvent.Values)
 
 		_, _, err = NewInserterFromMap("users", map[string]string{
 			"username":  "Les",
@@ -158,7 +158,7 @@ func TestExecutor(t *testing.T) {
 		updateEvent, ok := event.(*events.UpdateEvent)
 		require.True(t, ok)
 		require.Equal(t, []int{1}, updateEvent.Indexes)
-		require.Equal(t, map[string]string{"username": "Bob"}, updateEvent.Values)
+		require.Equal(t, map[int][]string{1: []string{"Bob", "cool_guy_2014"}}, updateEvent.Values)
 
 	}
 

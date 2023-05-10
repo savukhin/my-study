@@ -77,21 +77,48 @@ func LoadTransactionFile() (*TransactionFile, error) {
 		event := &events.Event{TableName: eventTable}
 
 		if eventType == string(events.CreateEventType) {
-			ev := &events.CreateEvent{Event: event}
-			json.Unmarshal([]byte(eventDescription), ev)
+			Ev := &events.CreateEvent{Event: event}
+			json.Unmarshal([]byte(eventDescription), Ev)
 
-			event.IEvent = ev
+			event.IEvent = Ev
+		} else if eventType == string(events.DeleteEventType) {
+			Ev := &events.DeleteEvent{Event: event}
+			json.Unmarshal([]byte(eventDescription), Ev)
+
+			event.IEvent = Ev
+		} else if eventType == string(events.DropEventType) {
+			Ev := &events.DropEvent{Event: event}
+			json.Unmarshal([]byte(eventDescription), Ev)
+
+			event.IEvent = Ev
+		} else if eventType == string(events.InsertEventType) {
+			Ev := &events.InsertEvent{Event: event}
+			json.Unmarshal([]byte(eventDescription), Ev)
+
+			event.IEvent = Ev
+		} else if eventType == string(events.RollbackEventType) {
+			Ev := &events.RollbackEvent{Event: event}
+			json.Unmarshal([]byte(eventDescription), Ev)
+
+			event.IEvent = Ev
+		} else if eventType == string(events.UpdateEventType) {
+			Ev := &events.UpdateEvent{Event: event}
+			json.Unmarshal([]byte(eventDescription), Ev)
+
+			event.IEvent = Ev
+		} else if eventType == string(events.WriteEventType) {
+			Ev := &events.WriteEvent{Event: event}
+			json.Unmarshal([]byte(eventDescription), Ev)
+
+			event.IEvent = Ev
 		} else {
-			ev := &events.DeleteEvent{Event: event}
-			json.Unmarshal([]byte(eventDescription), ev)
-
-			event.IEvent = ev
+			return nil, errors.New("unknown event type")
 		}
 
 		log := &Log{
 			TransactionTime: transactionTime,
 			TransactionName: transactionName,
-			ev:              event.IEvent,
+			Ev:              event.IEvent,
 		}
 
 		transactionFile.Logs = append(transactionFile.Logs, log)
@@ -116,7 +143,7 @@ func (logs *TransactionFile) Save() error {
 			log.TransactionName,
 			log.GetEventType(),
 			log.GetTableName(),
-			log.ev.GetDescription(),
+			log.Ev.GetDescription(),
 		}
 
 		data = append(data, record)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -172,13 +173,13 @@ func (table *Table) GetColumn(column string) ([]string, error) {
 	return col, nil
 }
 
-func (table *Table) AddRowMap(values map[string]string) error {
+func (table *Table) AddRowMap(values map[string]string) ([]string, error) {
 	resultValues, err := table.mapOfValuesToValuesArray(values)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return table.AddRow(resultValues)
+	return resultValues, table.AddRow(resultValues)
 }
 
 func (table *Table) AddRow(values []string) error {
@@ -237,9 +238,9 @@ func (table *Table) GetColumnIndex(name string) (int, error) {
 	return val, nil
 }
 
-func (table *Table) UpdateRow(row int, valuesMap map[string]string) error {
+func (table *Table) UpdateRow(row int, valuesMap map[string]string) ([]string, error) {
 	if row < 0 || row >= table.Shape.Y {
-		return errors.New("row " + strconv.Itoa(row) + " out of range " + strconv.Itoa(table.Shape.Y))
+		return nil, errors.New("row " + strconv.Itoa(row) + " out of range " + strconv.Itoa(table.Shape.Y))
 	}
 	// values, err := table.mapOfValuesToValuesArray(valuesMap)
 	// if err != nil {
@@ -251,7 +252,7 @@ func (table *Table) UpdateRow(row int, valuesMap map[string]string) error {
 	for column, _ := range valuesMap {
 		_, ok := table.columnsSet[column]
 		if !ok {
-			return errors.New("no such column")
+			return nil, errors.New("no such column")
 		}
 	}
 
@@ -261,7 +262,10 @@ func (table *Table) UpdateRow(row int, valuesMap map[string]string) error {
 		table.Values[row][ind] = value
 	}
 
-	return nil
+	newValues := make([]string, table.Shape.X)
+	copy(newValues, table.Values[row])
+
+	return newValues, nil
 }
 
 func (table *Table) HardUpdateRow(row int, values []string) error {
@@ -321,6 +325,8 @@ func (table *Table) ToString() string {
 	w := csv.NewWriter(buf)
 	w.Comma = ','
 	w.WriteAll(records) // calls Flush internally
+
+	fmt.Println("buf", buf)
 
 	return buf.String()
 }

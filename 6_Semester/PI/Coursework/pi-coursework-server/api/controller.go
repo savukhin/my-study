@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	mainexecutor "pi-coursework-server/main_executor"
 
 	"github.com/gin-gonic/gin"
@@ -23,8 +22,7 @@ func ExecuteQuery(c *gin.Context) {
 
 	response, err := mainexecutor.ExecuteWholeQuery(query.Query)
 	if err != nil {
-		fmt.Println(err)
-		c.JSON(400, gin.H{"message": response})
+		c.JSON(400, gin.H{"message": err.Error()})
 		return
 	}
 

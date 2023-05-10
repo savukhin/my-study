@@ -21,56 +21,101 @@ func LoadInitialState() error {
 	if err != nil {
 		return err
 	}
-	cachedStorage = cachedStorage2
 
 	fmt.Println("Loading transaction file")
-	log, err := transaction.LoadTransactionFile()
+	logs, err := transaction.LoadTransactionFile()
 	if err != nil {
 		return err
 	}
-	transactionFile = log
+
+	// complexTransName, err := transactionFile.GetLastActiveComplexTransactionName()
+	// if err != nil {
+	// 	return err
+	// }
+
+	// complexTransRollbacked, err := transactionFile.GetComplexTransactionByName(complexTransName)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// cachedStorage2, err = complexTransRollbacked.Eval(*cachedStorage2, nil)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// event := events.NewRollbackEvent(complexTransName)
+
+	// transactionLog.AddSingleEvent(event, "")
+
+	ind := logs.GetLastWriteIndex()
+	if ind == -1 {
+		ind = 0
+	}
+	fmt.Println("Loading", len(logs.Logs)-ind, "events")
+	for _, log := range logs.Logs[ind:] {
+		// log.
+		exec, err := executor.FromEvent(log.Ev)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Executing", log.Ev, "exec =", exec)
+
+		st, _, err := exec.DoExecute(cachedStorage2)
+		if err != nil {
+			return err
+		}
+		cachedStorage2 = &st
+	}
+
+	cachedStorage = cachedStorage2
+	transactionFile = logs
+
+	fmt.Println("Cached storage", cachedStorage)
+	musicians, _ := cachedStorage.GetTable("musicians")
+	fmt.Println("musicians", musicians)
 
 	return nil
 }
 
-func checkAndTryRollback(query string) error {
+func checkAndTryRollback(query string) (bool, error) {
 	err := planner.CheckRollback(query)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	fmt.Println("Catched rollback in query", query)
 
 	storage, err := transaction.NewRollbackTransaction().Eval(*cachedStorage, transactionFile)
 	if err != nil {
-		return err
+		return true, err
 	}
 
 	cachedStorage = &storage
-	return nil
+	return true, nil
 }
 
-func checkAndTryWrite(query string) error {
+func checkAndTryWrite(query string) (bool, error) {
 	err := planner.CheckWrite(query)
 	if err != nil {
-		return err
+		return false, err
 	}
 	fmt.Println("Catched write in query", query)
 
 	storage, err := transaction.NewWriteTransaction().Eval(*cachedStorage, transactionFile)
 	if err != nil {
-		return err
+		return true, err
 	}
 
 	cachedStorage = &storage
-	return nil
+	return true, nil
 }
 
-func checkAndTrySelect(query string) (string, error) {
+func checkAndTrySelect(query string) (string, bool, error) {
 	tableName, columns, whereCondition, limiter, err := planner.CheckSelector(query)
 	fmt.Println("check select", err)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	fmt.Println("Catched selector in query", query)
@@ -78,37 +123,40 @@ func checkAndTrySelect(query string) (string, error) {
 	exec := executor.NewSelector(tableName, columns, &whereCondition, &limiter)
 	// exec.Columns
 	table, err := exec.DoExecute(cachedStorage)
+	fmt.Println("err", err)
 	if err != nil {
-		return "", err
+		return "", true, err
 	}
 
-	return table.ToString(), nil
+	return table.ToString(), false, nil
 }
 
-func checkAndTrySingleLineCommand(query string) (string, error) {
-	if err := checkAndTryRollback(query); err == nil {
-		return "ok", nil
+func checkAndTrySingleLineCommand(query string) (string, bool, error) {
+	if checked, err := checkAndTryRollback(query); err == nil {
+		return "ok", checked, nil
 	}
 
-	if err := checkAndTryWrite(query); err == nil {
-		return "ok", nil
+	if checked, err := checkAndTryWrite(query); err == nil {
+		return "ok", checked, nil
 	}
 
-	if str, err := checkAndTrySelect(query); err == nil {
-		return str, nil
+	if str, checked, err := checkAndTrySelect(query); err == nil {
+		return str, checked, nil
 	}
 
-	return "", errors.New("single-line command not recognized")
+	return "", false, errors.New("single-line command not recognized")
 }
 
 func ExecuteWholeQuery(query string) (string, error) {
 	query = strings.Replace(query, "\n", " ", -1)
 	commands := strings.Split(query, ";")
 
-	if len(commands) == 1 {
-		command := strings.Trim(commands[0], " \t\n")
-		return checkAndTrySingleLineCommand(command)
-	}
+	fmt.Println("commands", commands)
+
+	// if len(commands) == 1 {
+	// 	command := strings.Trim(commands[0], " \t\n")
+	// 	return checkAndTrySingleLineCommand(command)
+	// }
 
 	// transactionBlocks := make([][]transaction.ITransaction, 0)
 	currentBlock := make([]executor.IExecutor, 0)
@@ -126,7 +174,10 @@ func ExecuteWholeQuery(query string) (string, error) {
 		}
 
 		if len(currentBlock) == 0 && !wasBegin {
-			str, err := checkAndTrySingleLineCommand(command)
+			str, checked, err := checkAndTrySingleLineCommand(command)
+			if checked && err != nil {
+				return "", err
+			}
 			if err == nil {
 				response = append(response, str)
 				continue
@@ -170,6 +221,13 @@ func ExecuteWholeQuery(query string) (string, error) {
 
 	result := ""
 	for _, output := range response {
+		if result == "" {
+			result = output
+			continue
+		}
+		if output == "" {
+			continue
+		}
 		result = result + "\n\n" + output
 	}
 

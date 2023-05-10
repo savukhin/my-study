@@ -8,16 +8,16 @@ import (
 type Log struct {
 	TransactionTime time.Time
 	TransactionName string
-	ev              events.IEvent
+	Ev              events.IEvent
 }
 
 func (log *Log) GetEventType() string {
-	return log.ev.GetEventType()
-	// stf, ok := log.ev.(*CreateEvent)
-	// fmt.Println("CREATE EVENT???", ok, log.ev, stf)
-	// _, del_ok := log.ev.(*DeleteEvent)
+	return log.Ev.GetEventType()
+	// stf, ok := log.Ev.(*CreateEvent)
+	// fmt.Println("CREATE EVENT???", ok, log.Ev, stf)
+	// _, del_ok := log.Ev.(*DeleteEvent)
 	// fmt.Println("DELETE EVENT???", del_ok)
-	// // _, ev_ok := log.ev.(Event)
+	// // _, ev_ok := log.Ev.(Event)
 	// // fmt.Println("EVENT EVENT???", ev_ok)
 	// if ok {
 	// 	return CreateEventType
@@ -26,5 +26,5 @@ func (log *Log) GetEventType() string {
 }
 
 func (log *Log) GetTableName() string {
-	return log.ev.GetTableName()
+	return log.Ev.GetTableName()
 }

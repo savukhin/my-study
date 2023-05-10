@@ -17,7 +17,7 @@ func (trans *RollbackTransaction) Eval(storage table.Storage, transactionLog *Tr
 
 	complexTransName, err := transactionLog.GetLastActiveComplexTransactionName()
 	if err != nil {
-		return storage, nil
+		return storage, err
 	}
 
 	complexTransRollbacked, err := transactionLog.GetRollbackedComplexTransactionByName(complexTransName)
