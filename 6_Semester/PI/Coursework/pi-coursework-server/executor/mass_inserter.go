@@ -22,6 +22,10 @@ func NewMassInserter(tableName string, afterIndexes []int, values map[int][]stri
 
 func (massInserter *MassInserter) DoExecute(storage *table.Storage) (table.Storage, events.IEvent, error) {
 	copied := storage.Copy()
+	if len(massInserter.AfterIndexes) == 0 {
+		return *copied, events.NewEmptyEvent(), nil
+	}
+
 	tab, err := copied.GetTable(massInserter.TableName)
 	if err != nil {
 		return *copied, nil, err

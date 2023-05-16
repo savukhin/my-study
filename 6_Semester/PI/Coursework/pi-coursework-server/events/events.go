@@ -20,6 +20,10 @@ type CreateEvent struct {
 	Columns   []string `json:"columns"`
 }
 
+type EmptyEvent struct {
+	*Event `json:"-"`
+}
+
 type InsertEvent struct {
 	*Event `json:"-"`
 	Values []string `json:"values"`
@@ -71,7 +75,19 @@ const (
 	DropEventType     EventType = "drop"
 	RollbackEventType EventType = "rollback"
 	WriteEventType    EventType = "write"
+	EmptyEventType    EventType = "empty"
 )
+
+func NewEmptyEvent() *EmptyEvent {
+	abs := &Event{
+		// TableName: tableName,
+	}
+	event := &EmptyEvent{
+		Event: abs,
+	}
+	abs.IEvent = event
+	return event
+}
 
 func NewCreateEvent(tableName string, columns []string) *CreateEvent {
 	abs := &Event{
@@ -174,6 +190,10 @@ func (event *CreateEvent) GetTableName() string {
 	return event.TableName
 }
 
+func (event *EmptyEvent) GetTableName() string {
+	return "None"
+}
+
 func (event *InsertEvent) GetTableName() string {
 	return event.TableName
 }
@@ -195,6 +215,10 @@ func (event *RollbackEvent) GetTableName() string {
 
 func (event *WriteEvent) GetTableName() string {
 	return "None"
+}
+
+func (event *EmptyEvent) GetDescription() string {
+	return "{}"
 }
 
 func (event *CreateEvent) GetDescription() string {
@@ -255,4 +279,8 @@ func (event *RollbackEvent) GetEventType() string {
 
 func (event *WriteEvent) GetEventType() string {
 	return string(WriteEventType)
+}
+
+func (event *EmptyEvent) GetEventType() string {
+	return string(EmptyEventType)
 }

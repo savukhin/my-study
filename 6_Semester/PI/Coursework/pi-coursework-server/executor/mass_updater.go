@@ -33,6 +33,9 @@ func (massUpdater *MassUpdater) DoExecute(storage *table.Storage) (table.Storage
 	oldValues := make(map[int][]string)
 
 	for y, _ := range tab.Values {
+		if i == len(indexes) {
+			break
+		}
 		if y == indexes[i] {
 			row := make([]string, tab.Shape.X)
 			copy(row, tab.Values[y])
