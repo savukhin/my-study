@@ -22,7 +22,7 @@ func TestTransaction(t *testing.T) {
 
 	exPath := filepath.Dir(ex)
 
-	TRANSACATION_FILE_PATH = path.Join(exPath, "transactions.csv")
+	TRANSACATION_FOLDER_PATH = exPath
 
 	{
 		// Ev := &CreateEvent{}
@@ -74,7 +74,7 @@ func TestTransaction(t *testing.T) {
 		fmt.Println("0", logs.Logs[0].TransactionName)
 		fmt.Println("1", logs.Logs[1].TransactionName)
 
-		q, _ := ioutil.ReadFile(TRANSACATION_FILE_PATH)
+		q, _ := ioutil.ReadFile(GetTransactionFilePath())
 		print(string(q))
 
 		logs_loaded, _, err := LoadTransactionFile()
@@ -161,7 +161,7 @@ func TestPipeline(t *testing.T) {
 
 	exPath := filepath.Dir(ex)
 
-	TRANSACATION_FILE_PATH = path.Join(exPath, "transactions.csv")
+	TRANSACATION_FOLDER_PATH = exPath
 	table.TABLES_PATH = path.Join(exPath, "tables")
 
 	storage := *table.NewStorage()
@@ -313,7 +313,7 @@ func TestPipeline(t *testing.T) {
 		// err = logs.Save()
 		// require.NoError(t, err)
 
-		q, _ := ioutil.ReadFile(TRANSACATION_FILE_PATH)
+		q, _ := ioutil.ReadFile(GetTransactionFilePath())
 		fmt.Println("TRANSACTION FILE", string(q))
 
 		logs_loaded, _, err := LoadTransactionFile()

@@ -41,7 +41,7 @@ func ParseOneQueryForExecutor(query string) (executor.IExecutor, error) {
 	tableName, setColumnName, setValue, where, err := CheckUpdate(query)
 	if err == nil {
 		exec, err := executor.NewUpdater(tableName,
-			where.Column, executor.WhereSign(where.Sign), where.Column,
+			where.Column, executor.WhereSign(where.Sign), where.Value,
 			map[string]string{
 				setColumnName: setValue,
 			})
@@ -56,14 +56,15 @@ func ParseOneQueryForExecutor(query string) (executor.IExecutor, error) {
 		return exec, nil
 	}
 
-	// 	tableName, where, err = CheckDeleteRows(query)
-	// 	if err == nil {
-	// 		plan.Plan = append(plan.Plan, processors.NewTableGetter(tableName))
-	// 		plan.Plan = append(plan.Plan, processors.NewAggregator(where.Column, where.Sign, where.ExtractValue()))
-	// 		plan.Plan = append(plan.Plan, processors.NewDeleter())
+	tableName, where, err = CheckDeleteRows(query)
+	if err == nil {
+		// plan.Plan = append(plan.Plan, processors.NewTableGetter(tableName))
+		// plan.Plan = append(plan.Plan, processors.NewAggregator(where.Column, where.Sign, where.ExtractValue()))
+		// plan.Plan = append(plan.Plan, processors.NewDeleter())
+		exec := executor.NewDeleter(tableName, where.Column, executor.WhereSign(where.Sign), where.Value)
 
-	// 		return plan, nil
-	// 	}
+		return exec, nil
+	}
 
 	// 	transaction, err := CheckBeginTransaction(query)
 	// 	if err == nil {

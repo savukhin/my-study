@@ -11,6 +11,22 @@ func Ping(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "pong"})
 }
 
+func formResponseStr(responses []string) string {
+	result := ""
+	for _, output := range responses {
+		if result == "" {
+			result = output
+			continue
+		}
+		if output == "" {
+			continue
+		}
+		result = result + "\n\n" + output
+	}
+
+	return result
+}
+
 func ExecuteQuery(c *gin.Context) {
 	c.Header("Content-Type", "application/json")
 	// c.JSON(200, gin.H{"message": "pong"})
@@ -20,13 +36,15 @@ func ExecuteQuery(c *gin.Context) {
 		return
 	}
 
-	response, err := mainexecutor.ExecuteWholeQuery(query.Query)
+	responses, err := mainexecutor.ExecuteWholeQuery(query.Query)
+
 	if err != nil {
-		c.JSON(400, gin.H{"message": err.Error()})
+		responses = append(responses, err.Error())
+		c.JSON(400, gin.H{"message": formResponseStr(responses)})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": response})
+	c.JSON(200, gin.H{"message": formResponseStr(responses)})
 }
 
 // func Auth(c *gin.Context) {}

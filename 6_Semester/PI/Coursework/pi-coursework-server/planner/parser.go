@@ -49,7 +49,7 @@ func ParseOneString(query string) (*Plan, error) {
 	tableName, setColumnName, setValue, where, err := CheckUpdate(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewTableGetter(tableName))
-		plan.Plan = append(plan.Plan, processors.NewAggregator(where.Column, where.Sign, where.ExtractValue()))
+		plan.Plan = append(plan.Plan, processors.NewAggregator(where.Column, where.Sign, where.Value))
 		plan.Plan = append(plan.Plan, processors.NewUpdater(setColumnName, setValue))
 
 		return plan, nil
@@ -60,7 +60,7 @@ func ParseOneString(query string) (*Plan, error) {
 		plan.Plan = append(plan.Plan, processors.NewTableGetter(tableName))
 
 		if whereCondition.HasWhere {
-			plan.Plan = append(plan.Plan, processors.NewAggregator(whereCondition.Column, whereCondition.Sign, whereCondition.ExtractValue()))
+			plan.Plan = append(plan.Plan, processors.NewAggregator(whereCondition.Column, whereCondition.Sign, whereCondition.Value))
 		}
 
 		plan.Plan = append(plan.Plan, processors.NewSelector(columns))
@@ -82,7 +82,7 @@ func ParseOneString(query string) (*Plan, error) {
 	tableName, where, err = CheckDeleteRows(query)
 	if err == nil {
 		plan.Plan = append(plan.Plan, processors.NewTableGetter(tableName))
-		plan.Plan = append(plan.Plan, processors.NewAggregator(where.Column, where.Sign, where.ExtractValue()))
+		plan.Plan = append(plan.Plan, processors.NewAggregator(where.Column, where.Sign, where.Value))
 		plan.Plan = append(plan.Plan, processors.NewDeleter())
 
 		return plan, nil

@@ -1,32 +1,9 @@
 package utils
 
-import (
-	"errors"
-	"strconv"
-)
-
 type WhereCondition struct {
-	Sign     string `regroup:"where_sign"`
-	Column   string `regroup:"where_column"`
-	Value    string `regroup:"where_value"`
-	ValueStr string `regroup:"where_value_str"`
-	ValueInt int32  `regroup:"where_value_int"`
-}
-
-func (where *WhereCondition) ExtractValue() string {
-	if where.Value[0] == '\'' {
-		return where.ValueStr
-	} else {
-		return strconv.Itoa(int(where.ValueInt))
-	}
-}
-
-func (where *WhereCondition) GetIntValue() (int32, error) {
-	if where.Value[0] == '\'' {
-		return 0, errors.New("where condition is not digit")
-	} else {
-		return where.ValueInt, nil
-	}
+	Sign   string `regroup:"where_sign"`
+	Column string `regroup:"where_column"`
+	Value  string `regroup:"where_value"`
 }
 
 type WhereConditionCheck struct {
@@ -43,10 +20,9 @@ type LimitCondition struct {
 
 func NewWhereCondition(column, sign, value string) *WhereCondition {
 	return &WhereCondition{
-		Column:   column,
-		Sign:     sign,
-		Value:    value,
-		ValueStr: value,
+		Column: column,
+		Sign:   sign,
+		Value:  value,
 	}
 }
 

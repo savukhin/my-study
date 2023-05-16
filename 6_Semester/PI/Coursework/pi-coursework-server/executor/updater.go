@@ -2,6 +2,7 @@ package executor
 
 import (
 	"errors"
+	"fmt"
 	"pi-coursework-server/events"
 	"pi-coursework-server/table"
 )
@@ -62,7 +63,10 @@ func (updater *Updater) DoExecute(storage *table.Storage) (table.Storage, events
 	newValues := make(map[int][]string)
 
 	for y, row := range tab.Values {
+		fmt.Println("Updating row", y, "values (", row, ")", "sign =", updater.Sign, "columnInd = ", columnInd, "compareValues", updater.CompareValues, EqualWhereSign, row[columnInd])
+
 		if (row[columnInd] == updater.CompareValues && updater.Sign == EqualWhereSign) || (row[columnInd] != updater.CompareValues && updater.Sign == NotEqualWhereSign) {
+			fmt.Println("Suitable", y)
 			yUpdate = append(yUpdate, y)
 			oldValues[y] = make([]string, len(row))
 			copy(oldValues[y], row)

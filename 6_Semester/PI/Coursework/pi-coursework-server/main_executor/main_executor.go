@@ -87,7 +87,7 @@ func checkAndTrySingleLineCommand(query string) (string, bool, error) {
 	return "", false, errors.New("single-line command not recognized")
 }
 
-func ExecuteWholeQuery(query string) (string, error) {
+func ExecuteWholeQuery(query string) ([]string, error) {
 	query = strings.Replace(query, "\n", " ", -1)
 	commands := strings.Split(query, ";")
 
@@ -102,7 +102,7 @@ func ExecuteWholeQuery(query string) (string, error) {
 	currentBlock := make([]executor.IExecutor, 0)
 	wasBegin := false
 
-	response := make([]string, 0)
+	responses := make([]string, 0)
 
 	for _, command := range commands {
 		fmt.Println(command)
@@ -116,10 +116,10 @@ func ExecuteWholeQuery(query string) (string, error) {
 		if len(currentBlock) == 0 && !wasBegin {
 			str, checked, err := checkAndTrySingleLineCommand(command)
 			if checked && err != nil {
-				return "", err
+				return responses, err
 			}
 			if err == nil {
-				response = append(response, str)
+				responses = append(responses, str)
 				continue
 			}
 
@@ -129,11 +129,11 @@ func ExecuteWholeQuery(query string) (string, error) {
 				continue
 			}
 
-			return "", errors.New("no begin in transaction")
+			return responses, errors.New("no begin in transaction")
 		}
 
 		if err := planner.CheckBegin(command); err == nil {
-			return "", errors.New("more than one begin in transaction")
+			return responses, errors.New("more than one begin in transaction")
 		}
 
 		if err := planner.CheckCommit(command); err == nil {
@@ -141,35 +141,25 @@ func ExecuteWholeQuery(query string) (string, error) {
 			fmt.Println("Catched complex in query", currentBlock)
 			storage2, err := complex.Eval(*cachedStorage, transactionFile, "", -1, true)
 			if err != nil {
-				return "", err
+				return responses, err
 			}
 			cachedStorage = &storage2
 
 			currentBlock = make([]executor.IExecutor, 0)
 			wasBegin = false
 
+			responses = append(responses, "ok")
+
 			continue
 		}
 
 		exec, err := planner.ParseOneQueryForExecutor(command)
 		if err != nil {
-			return "", err
+			return responses, err
 		}
 
 		currentBlock = append(currentBlock, exec)
 	}
 
-	result := ""
-	for _, output := range response {
-		if result == "" {
-			result = output
-			continue
-		}
-		if output == "" {
-			continue
-		}
-		result = result + "\n\n" + output
-	}
-
-	return result, nil
+	return responses, nil
 }

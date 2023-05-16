@@ -154,7 +154,7 @@ func TestCheckers(t *testing.T) {
 		require.Equal(t, condition.HasWhere, true)
 		require.Equal(t, condition.Column, "room")
 		require.Equal(t, condition.Sign, "==")
-		require.EqualValues(t, condition.ValueStr, "4")
+		require.EqualValues(t, condition.Value, "4")
 		require.Equal(t, limit.LimitStr, "LIMIT")
 		require.Equal(t, limit.HasLimit, true)
 		require.EqualValues(t, limit.Limit, 10)
@@ -188,7 +188,7 @@ func TestCheckers(t *testing.T) {
 		require.Equal(t, table, "adf")
 		require.Equal(t, where.Column, "room")
 		require.Equal(t, where.Sign, "!=")
-		require.Equal(t, where.ValueStr, "4")
+		require.Equal(t, where.Value, "4")
 
 		_, _, err = CheckDeleteRows("delete from WhERe room != '4'")
 		require.Error(t, err)
@@ -235,14 +235,13 @@ func TestCheckers(t *testing.T) {
 
 	t.Log("updates")
 	{
-		tableName, setColumnName, setValue, where, err := CheckUpdate("update employee set room = '14' where index == 1")
+		tableName, setColumnName, setValue, where, err := CheckUpdate("update employee set room = '14' where index == '1'")
 		require.NoError(t, err)
 		require.Equal(t, tableName, "employee")
 		require.Equal(t, setColumnName, "room")
 		require.Equal(t, setValue, "14")
 		require.Equal(t, where.Column, "index")
 		require.Equal(t, where.Sign, "==")
-		require.EqualValues(t, where.ValueInt, 1)
 		require.EqualValues(t, where.Value, "1")
 	}
 

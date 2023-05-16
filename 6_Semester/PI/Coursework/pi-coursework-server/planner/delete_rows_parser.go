@@ -1,6 +1,7 @@
 package planner
 
 import (
+	"fmt"
 	"pi-coursework-server/utils"
 	"strings"
 
@@ -8,7 +9,7 @@ import (
 )
 
 var (
-	deleteRowsRegexp = regroup.MustCompile(`(?i)delete\s+from\s+(?P<table_name>\w+)\s+where\s+(?P<where_column>\w+)\s+(?P<where_sign>(?:==)|(?:!=))\s+(?P<where_value>(?:\'(?P<where_value_str>\w+)\')|(?P<where_value_int>\d+))`)
+	deleteRowsRegexp = regroup.MustCompile(`(?i)delete\s+from\s+(?P<table_name>\w+)\s+where\s+(?P<where_column>\w+)\s+(?P<where_sign>(?:==)|(?:!=))\s+(?:\'(?P<where_value>\w+)\')`)
 )
 
 type DeleteRowsGroup struct {
@@ -19,6 +20,7 @@ type DeleteRowsGroup struct {
 func CheckDeleteRows(query string) (tableName string, where utils.WhereCondition, err error) {
 	elem := &DeleteRowsGroup{}
 	err = deleteRowsRegexp.MatchToTarget(strings.TrimSpace(query), elem)
+	fmt.Println("Checking delete rows ", query, "err ", err)
 	if err != nil {
 		return
 	}

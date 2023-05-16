@@ -28,6 +28,12 @@ func (selector *Selector) DoExecute(storage *table.Storage) (table.Table, error)
 		return table.Table{}, err
 	}
 
+	for _, col := range selector.Columns {
+		if !tab.HasColumn(col) && col != "*" {
+			return tab, errors.New("no such column name " + col)
+		}
+	}
+
 	where := selector.Where
 	if where != nil && where.HasWhere {
 		result := table.MustNewTable(tab.TableName, tab.Columns, make([][]string, 0))
@@ -41,7 +47,7 @@ func (selector *Selector) DoExecute(storage *table.Storage) (table.Table, error)
 			return table.Table{}, err
 		}
 
-		val := where.ValueStr
+		val := where.Value
 
 		for i, elem := range column {
 			if where.Sign == "==" && elem == val {

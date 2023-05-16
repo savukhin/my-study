@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	selectRegexp = regroup.MustCompile(`(?i)^select\s+(?:(?P<columns>(?:(?:\s*\w+\s*,\s*)*\s*\w+)|(?:\*)))\s+from\s+(?P<table_name>\w+)(?:\s+(?P<has_where>where)\s+(?P<where_column>\w+)\s+(?P<where_sign>(?:==)|(?:!=))\s+(?P<where_value>(?:\'(?P<where_value_str>\w+)\')|(?P<where_value_int>\d+)))?(?:\s+(?P<has_limit>limit)\s+(?P<limit>\d+))?$`)
+	selectRegexp = regroup.MustCompile(`(?i)^select\s+(?:(?P<columns>(?:(?:\s*\w+\s*,\s*)*\s*\w+)|(?:\*)))\s+from\s+(?P<table_name>\w+)(?:\s+(?P<has_where>where)\s+(?P<where_column>\w+)\s+(?P<where_sign>(?:==)|(?:!=))\s+(?:\'(?P<where_value>\w+)\'))?(?:\s+(?P<has_limit>limit)\s+(?P<limit>\d+))?$`)
 )
 
 type SelectorGroup struct {

@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	TRANSACATION_FILE_PATH = utils.GetEnvDefault("TRANSACATION_FILE_PATH", path.Join(".", "static", "transactions", "transactions.csv"))
-	columns                = []string{
+	TRANSACATION_FOLDER_PATH = utils.GetEnvDefault("TRANSACATION_FOLDER_PATH", path.Join(".", "static", "transactions"))
+	// TRANSACATION_FILE_PATH = utils.GetEnvDefault("TRANSACATION_FILE_PATH", path.Join(".", "static", "transactions", "transactions.csv"))
+	columns = []string{
 		"time",
 		"transaction_name",
 		"event_type",
@@ -22,6 +23,10 @@ var (
 		"event_description",
 	}
 )
+
+func GetTransactionFilePath() string {
+	return path.Join(TRANSACATION_FOLDER_PATH, "transactions.csv")
+}
 
 func CreateEmptyTransactionFile() (*TransactionFile, *table.Storage, error) {
 	logs := NewTransactionFile()
@@ -60,7 +65,7 @@ func AddBlock(block []events.IEvent, storage *table.Storage, transactionFile *Tr
 }
 
 func LoadTransactionFile() (*TransactionFile, *table.Storage, error) {
-	file, err := os.OpenFile(TRANSACATION_FILE_PATH, os.O_RDONLY, 0600)
+	file, err := os.OpenFile(GetTransactionFilePath(), os.O_RDONLY, 0600)
 	if err != nil {
 		return CreateEmptyTransactionFile()
 	}
@@ -189,7 +194,12 @@ func LoadTransactionFile() (*TransactionFile, *table.Storage, error) {
 }
 
 func (logs *TransactionFile) Save() error {
-	file, err := os.OpenFile(TRANSACATION_FILE_PATH, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+	err := os.MkdirAll(TRANSACATION_FOLDER_PATH, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.OpenFile(GetTransactionFilePath(), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}

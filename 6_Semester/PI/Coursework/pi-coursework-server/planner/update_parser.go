@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	updateRegexp = regroup.MustCompile(`(?i)^update\s+(?P<table_name>\w+)\s+set\s+(?P<set_column_name>\w+)\s*=\s*\'(?P<set_value>\w+)\'\s+where\s+(?P<where_column>\w+)\s+(?P<where_sign>(?:==)|(?:!=))\s+(?P<where_value>(?:\'(?P<where_value_str>\w+)\')|(?P<where_value_int>\d+))$`)
+	updateRegexp = regroup.MustCompile(`(?i)^update\s+(?P<table_name>\w+)\s+set\s+(?P<set_column_name>\w+)\s*=\s*\'(?P<set_value>\w+)\'\s+where\s+(?P<where_column>\w+)\s+(?P<where_sign>(?:==)|(?:!=))\s+(?:\'(?P<where_value>\w+)\')$`)
 )
 
 type UpdateGroup struct {
