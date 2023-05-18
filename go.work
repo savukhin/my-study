@@ -5,4 +5,6 @@ use (
 	./6_Semester/OS/Coursework/generator
 	./6_Semester/OS/Coursework/processor
 	./6_Semester/OS/Coursework/server
+	./6_Semester/PI/Coursework/pi-coursework-client
+	./6_Semester/PI/Coursework/pi-coursework-server
 )
