@@ -81,6 +81,10 @@ func LoadTransactionFile() (*TransactionFile, *table.Storage, error) {
 		return nil, nil, err
 	}
 
+	if len(records) == 0 {
+		return CreateEmptyTransactionFile()
+	}
+
 	for i := range columns {
 		if columns[i] != records[0][i] {
 			return nil, nil, errors.New("error in transaction file - columns doesn't match")
