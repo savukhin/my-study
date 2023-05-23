@@ -229,6 +229,14 @@ func (event *CreateEvent) GetDescription() string {
 	return string(result)
 }
 
+func (event *DropEvent) GetDescription() string {
+	result, err := json.Marshal(event)
+	if err != nil {
+		panic(err)
+	}
+	return string(result)
+}
+
 func (event *InsertEvent) GetDescription() string {
 	result, _ := json.Marshal(event)
 	return string(result)
