@@ -1,9 +1,27 @@
+BEGIN a;
+    CREATE TABLE musicians(name, surname, band);
+BEGIN b;
+    CREATE TABLE musicians(name, surname, band);
+SELECT * FROM musicians;
+
+COMMIT a;
+ROLLBACK a;
+
+
 BEGIN;
     CREATE TABLE musicians(name, surname, band);
     INSERT INTO musicians(surname, band, name) values (Shinoda, LinkinPark, Mike);
     INSERT INTO musicians(name, surname, band) values (Chester, Bennington, LinkinPark);
     INSERT INTO musicians(name, surname, band) values (Maybe, Baby, MaybeBaby);
 COMMIT;
+SELECT * FROM musicians;
+
+BEGIN;
+    INSERT INTO musicians(name, surname, band) values (Ozzy, Osbourne, BlackSabbath);
+COMMIT;
+SELECT * FROM musicians;
+
+ROLLBACk;
 SELECT * FROM musicians;
 
 BEGIN;
@@ -17,16 +35,12 @@ SELECT * FROM musicians WHERE name == 'Maybe';
 BEGIN;
     UPDATE musicians SET band = 'BabyMaybe' WHERE name == 'Maybe';
 COMMIT;
+SELECT * FROM musicians;
 
 BEGIN;
     UPDATE musicians SET band = 'BabyMaybe' WHERE name == 'Maybe1';
 COMMIT;
 SELECT * FROM musicians;
-
-BEGIN a;
-    UPDATE musicians SET band = 'BabyMaybe' WHERE name == 'Maybe1';
-ROLLBACK a;
-
 
 ROLLBACK;
 SELECT * FROM musicians;
@@ -42,5 +56,7 @@ BEGIN;
 COMMIT;
 SELECT * FROM musicians;
 
+ROLLBACK;
+SELECT * FROM musicians;
 
 ДОЛЖНЫ БЫТЬ ИМЕНОВАННЫЕ ТРАНЗАКЦИИ

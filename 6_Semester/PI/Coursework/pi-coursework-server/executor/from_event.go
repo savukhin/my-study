@@ -19,7 +19,7 @@ func RollbackEvent(event events.IEvent) (IExecutor, error) {
 
 	dropEvent, ok := event.(*events.DropEvent)
 	if ok {
-		return NewCreator(dropEvent.TableName, dropEvent.Columns), nil
+		return NewMassCreator(dropEvent.TableName, dropEvent.Columns, dropEvent.Values), nil
 	}
 
 	insertEvent, ok := event.(*events.InsertEvent)

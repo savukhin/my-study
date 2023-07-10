@@ -16,6 +16,7 @@ var (
 	commitTransactionRegexp = regroup.MustCompile(`(?i)^commit\s+(?P<transaction_name>\w+)$`)
 	commitRegexp            = regexp.MustCompile(`(?i)^commit$`)
 	rollbackRegexp          = regexp.MustCompile(`(?i)^rollback$`)
+	rollbackNamedRegexp     = regroup.MustCompile(`(?i)^rollback\s+(?P<transaction_name>\w+)$`)
 )
 
 type TransactionGroup struct {
@@ -78,6 +79,19 @@ func CheckRollback(query string) error {
 	}
 
 	return nil
+}
+
+func CheckNamedRollback(query string) (transactionName string, err error) {
+	elem := &TransactionGroup{}
+	err = rollbackNamedRegexp.MatchToTarget(strings.TrimSpace(query), elem)
+	if err != nil {
+		return
+	}
+
+	transactionName = elem.TransactionName
+	err = nil
+
+	return
 }
 
 func CheckWrite(query string) (err error) {
